@@ -1,3 +1,5 @@
+package br.gov.serpro.wsdl2pl;
+
 import java.io.File;
 import java.io.FileWriter;
 
