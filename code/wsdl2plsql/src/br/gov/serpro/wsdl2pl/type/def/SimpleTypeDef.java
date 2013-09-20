@@ -1,6 +1,6 @@
 package br.gov.serpro.wsdl2pl.type.def;
 
-import br.gov.serpro.wsdl2pl.parser.Context;
+import br.gov.serpro.wsdl2pl.Context;
 
 import com.predic8.schema.SimpleType;
 

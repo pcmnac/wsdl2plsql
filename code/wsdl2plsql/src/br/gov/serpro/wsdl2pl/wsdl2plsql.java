@@ -5,9 +5,9 @@ import java.io.FileWriter;
 
 import br.gov.serpro.wsdl2pl.emitter.impl.DefaultKeywordEmitter;
 import br.gov.serpro.wsdl2pl.emitter.impl.DefaultSymbolNameEmitter;
-import br.gov.serpro.wsdl2pl.parser.Context;
 import br.gov.serpro.wsdl2pl.parser.OperationsParser;
 import br.gov.serpro.wsdl2pl.parser.TypesParser;
+import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.writer.FunctionBodyWriter;
 import br.gov.serpro.wsdl2pl.writer.SpecWriter;
 
@@ -41,6 +41,7 @@ public class wsdl2plsql implements Runnable
         Context context = new Context(defs);
 
         context.setPackageName(packageName);
+        context.resolveProtocol(K.Protocol.SOAP_1_2);
 
         context.setKeywordEmitter(new DefaultKeywordEmitter());
         context.setSymbolNameEmitter(new DefaultSymbolNameEmitter());
@@ -66,8 +67,8 @@ public class wsdl2plsql implements Runnable
             FunctionBodyWriter functionBodyWriter = new FunctionBodyWriter(context);
             bodyWriter.write(functionBodyWriter.writeFunctionsBody());
 
-            System.out.println(String.format("\nWSDL parsed successfully!\n\nFiles generated:\n  - %s\n  - %s", specFileName.getCanonicalPath(),
-                    bodyFileName.getCanonicalPath()));
+            System.out.println(String.format("\nWSDL parsed successfully!\n\nFiles generated:\n  - %s\n  - %s",
+                    specFileName.getCanonicalPath(), bodyFileName.getCanonicalPath()));
 
         }
         catch (Exception e)
@@ -113,9 +114,10 @@ public class wsdl2plsql implements Runnable
         }
         else
         {
-            System.out.println("Usage: java -jar wsdl2plsql.jar <WSDL location> <PL/SQL Package Name> [<Dest Dir>]\n"
-                    + "Ex.: java -jar wsdl2plsql.jar http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx?WSDL pk_ws_correios\n"
-                    + "Ex.: java -jar wsdl2plsql.jar ~/docs/wsdl/correios.wsdl pk_ws_correios");
+            System.out
+                    .println("Usage: java -jar wsdl2plsql.jar <WSDL location> <PL/SQL Package Name> [<Dest Dir>]\n"
+                            + "Ex.: java -jar wsdl2plsql.jar http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx?WSDL pk_ws_correios\n"
+                            + "Ex.: java -jar wsdl2plsql.jar ~/docs/wsdl/correios.wsdl pk_ws_correios");
         }
     }
 }

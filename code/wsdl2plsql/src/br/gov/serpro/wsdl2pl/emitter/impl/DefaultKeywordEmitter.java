@@ -235,4 +235,22 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
         return "DATE";
     }
 
+    @Override
+    public String exception()
+    {
+        return "EXCEPTION";
+    }
+
+    @Override
+    public Object raise()
+    {
+        return "RAISE";
+    }
+
+    @Override
+    public Object elseif()
+    {
+        return "ELSIF";
+    }
+
 }

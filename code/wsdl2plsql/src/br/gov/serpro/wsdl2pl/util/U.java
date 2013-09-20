@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.emitter.IKeywordEmitter;
-import br.gov.serpro.wsdl2pl.parser.Context;
 
 import com.predic8.schema.Element;
 import com.predic8.wsdl.Definitions;

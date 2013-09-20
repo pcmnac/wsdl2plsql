@@ -19,8 +19,8 @@
       wl_index := 1;
       wl_length := NVL(length(wp_data), 0);
       
-      dbms_output.put_line('CONNECTING TO: ' || wp_url);
-      dbms_output.put_line('REQUEST: ' || wp_data);
+      -- dbms_output.put_line('CONNECTING TO: ' || wp_url);
+      -- dbms_output.put_line('REQUEST: ' || wp_data);
   
       -- configure HTTP
       utl_http.set_response_error_check(enable => FALSE);
@@ -62,7 +62,7 @@
       END;
       utl_http.end_response(wl_response);
       
-      dbms_output.put_line('RESPONSE: ' || wl_buffer); 
+      -- dbms_output.put_line('RESPONSE: ' || wl_buffer); 
   
       RETURN wl_buffer;
   

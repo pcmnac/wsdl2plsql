@@ -1,7 +1,10 @@
 package br.gov.serpro.wsdl2pl.parser;
 
+import groovy.xml.QName;
+import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.exception.ParsingException;
 import br.gov.serpro.wsdl2pl.type.ElementInfo;
+import br.gov.serpro.wsdl2pl.type.Exception;
 import br.gov.serpro.wsdl2pl.type.Field;
 import br.gov.serpro.wsdl2pl.type.RecordType;
 import br.gov.serpro.wsdl2pl.type.VarrayType;
@@ -10,6 +13,7 @@ import br.gov.serpro.wsdl2pl.type.def.ComplexTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 import br.gov.serpro.wsdl2pl.type.def.SimpleTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.XsdTypeDef;
+import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.util.U;
 
 import com.predic8.schema.ComplexType;
@@ -17,6 +21,7 @@ import com.predic8.schema.Element;
 import com.predic8.schema.ModelGroup;
 import com.predic8.schema.Schema;
 import com.predic8.schema.SchemaComponent;
+import com.predic8.schema.Sequence;
 import com.predic8.schema.SimpleType;
 import com.predic8.wsdl.Types;
 
@@ -41,12 +46,156 @@ public class TypesParser
                     dissectSimpleType(simpleType);
                 }
 
+                addSoapFaultType();
+
                 for (ComplexType complexType : schema.getComplexTypes())
                 {
                     dissectComplexType(complexType);
                 }
             }
         }
+    }
+
+    public void addSoapFaultType()
+    {
+        ComplexType complexType = null;
+
+        if (context.getProtocol().equals(K.Protocol.SOAP_1_1))
+        {
+            complexType = buildSoap11FaultComplexType();
+        }
+        else if (context.getProtocol().equals(K.Protocol.SOAP_1_2))
+        {
+            complexType = buildSoap12FaultComplexType();
+        }
+
+        dissectComplexType(complexType);
+
+        Exception exception = new Exception(context, new ElementInfo("SoapFault"));
+        exception.setType(new ComplexTypeDef(context, complexType.getQname()));
+
+        context.registerSoapFaultException(exception);
+    }
+
+    private ComplexType buildSoap11FaultComplexType()
+    {
+        ComplexType fault = new ComplexType();
+        fault.setName("Fault");
+        fault.setQname(new QName(K.Uri.SOAP_ENVELOPE, "Fault"));
+        fault.setModel(new Sequence());
+
+        Schema schema = new Schema();
+        schema.setTargetNamespace(K.Uri.SOAP_ENVELOPE);
+        schema.add(fault);
+
+        Element faultCode = new Element();
+        faultCode.setName("faultcode");
+        faultCode.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        fault.getSequence().add(faultCode);
+
+        Element faultString = new Element();
+        faultString.setName("faultstring");
+        faultString.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        fault.getSequence().add(faultString);
+
+        Element faultActor = new Element();
+        faultActor.setName("faultactor");
+        faultActor.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        fault.getSequence().add(faultActor);
+
+        return fault;
+    }
+
+    private ComplexType buildSoap12FaultComplexType()
+    {
+        Schema schema = new Schema();
+        schema.setTargetNamespace(K.Uri.SOAP_ENVELOPE);
+        schema.setElementFormDefault("qualified");
+
+        // SubCode
+        ComplexType subCode = new ComplexType();
+        subCode.setName("SubCode");
+        subCode.setQname(new QName(K.Uri.SOAP_ENVELOPE, subCode.getName()));
+        subCode.setModel(new Sequence());
+        schema.add(subCode);
+
+        Element valueElement = new Element();
+        valueElement.setName("Value");
+        valueElement.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        valueElement.setSchema(schema);
+        subCode.getSequence().add(valueElement);
+
+        dissectComplexType(subCode);
+
+        // Code
+        ComplexType code = new ComplexType();
+        code.setName("Code");
+        code.setQname(new QName(K.Uri.SOAP_ENVELOPE, code.getName()));
+        code.setModel(new Sequence());
+        schema.add(code);
+
+        code.getSequence().add(valueElement);
+
+        Element subCodeElement = new Element();
+        subCodeElement.setName(subCode.getName());
+        subCodeElement.setType(subCode.getQname());
+        subCodeElement.setSchema(schema);
+        code.getSequence().add(subCodeElement);
+
+        dissectComplexType(code);
+
+        // Reason
+
+        ComplexType reason = new ComplexType();
+        reason.setName("Reason");
+        reason.setQname(new QName(K.Uri.SOAP_ENVELOPE, reason.getName()));
+        reason.setModel(new Sequence());
+        schema.add(reason);
+
+        Element textElement = new Element();
+        textElement.setName("Text");
+        textElement.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        textElement.setSchema(schema);
+        reason.getSequence().add(textElement);
+
+        dissectComplexType(reason);
+
+        // Fault
+
+        ComplexType fault = new ComplexType();
+        fault.setName("Fault");
+        fault.setQname(new QName(K.Uri.SOAP_ENVELOPE, "Fault"));
+        fault.setModel(new Sequence());
+
+        schema.add(fault);
+
+        Element codeElement = new Element();
+        codeElement.setName(code.getName());
+        codeElement.setType(code.getQname());
+        codeElement.setSchema(schema);
+        fault.getSequence().add(codeElement);
+
+        Element reasonElement = new Element();
+        reasonElement.setName(reason.getName());
+        reasonElement.setType(reason.getQname());
+        reasonElement.setSchema(schema);
+        fault.getSequence().add(reasonElement);
+
+        Element nodeElement = new Element();
+        nodeElement.setName("Node");
+        nodeElement.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        nodeElement.setSchema(schema);
+        fault.getSequence().add(nodeElement);
+
+        Element roleElement = new Element();
+        roleElement.setName("Role");
+        roleElement.setType(new QName(K.Uri.XML_SCHEMA, "string"));
+        roleElement.setSchema(schema);
+        fault.getSequence().add(roleElement);
+
+        dissectComplexType(fault);
+
+        return fault;
     }
 
     private void dissectComplexType(ComplexType complexType)
@@ -62,6 +211,9 @@ public class TypesParser
 
             for (Element element : modelGroup.getElements())
             {
+                boolean isArray = element.getMaxOccurs().equals("unbounded")
+                        || Integer.parseInt(element.getMaxOccurs()) > 1;
+
                 element = context.findElement(element);
 
                 Field field = new Field(context, recordType, new ElementInfo(element));
@@ -85,11 +237,12 @@ public class TypesParser
                 }
                 else
                 {
-                    throw new ParsingException(String.format("Element <%s> must define its type. Complex type sub-elements must define their type.",
+                    throw new ParsingException(String.format(
+                            "Element <%s> must define its type. Complex type sub-elements must define their type.",
                             element.getName()));
                 }
 
-                if (element.getMaxOccurs().equals("unbounded") || Integer.parseInt(element.getMaxOccurs()) > 1)
+                if (isArray)
                 {
                     VarrayType arrayType = new VarrayType(context, fieldType);
 

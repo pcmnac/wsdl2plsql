@@ -27,7 +27,8 @@ public class ElementInfo
 
     public ElementInfo(Element element)
     {
-        this(element.getName(), element.getSchema().getElementFormDefault().equals("qualified") ? element.getSchema().getTargetNamespace() : null);
+        this(element.getName(), (element.getSchema() != null && element.getSchema().getElementFormDefault()
+                .equals("qualified")) ? element.getSchema().getTargetNamespace() : null);
         setOptional(Integer.parseInt(element.getMinOccurs()) == 0);
     }
 
@@ -59,6 +60,12 @@ public class ElementInfo
     public void setOptional(boolean optional)
     {
         this.optional = optional;
+    }
+
+    @Override
+    public String toString()
+    {
+        return (getNamespace() != null ? "{" + getNamespace() + "}" : "") + getName();
     }
 
 }

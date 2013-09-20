@@ -33,7 +33,8 @@ public class DefaultSymbolNameEmitter implements ISymbolNameEmitter
     }
 
     @Override
-    public String param(String namespacePrefix, String name, Parameter.Direction direction, boolean header, ITypeDef type, String functionName)
+    public String param(String namespacePrefix, String name, Parameter.Direction direction, boolean header,
+            ITypeDef type, String functionName)
     {
         return U.toUnderscored("wp_" + (header ? "Header" + direction.name() + "_" : "") + name).toLowerCase();
     }
@@ -42,6 +43,18 @@ public class DefaultSymbolNameEmitter implements ISymbolNameEmitter
     public String localVar(String namespacePrefix, String name, ITypeDef type, String functionName)
     {
         return U.toUnderscored("wl_" + name).toLowerCase();
+    }
+
+    @Override
+    public String exception(String namespacePrefix, String name, ITypeDef type)
+    {
+        return U.toUnderscored("err_" + name).toLowerCase();
+    }
+
+    @Override
+    public String exceptionVar(String prefix, String name, ITypeDef type)
+    {
+        return U.toUnderscored("ex_" + name).toLowerCase();
     }
 
     // private String ns(String prefix)

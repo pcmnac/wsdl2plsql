@@ -1,7 +1,7 @@
 package br.gov.serpro.wsdl2pl.type.def;
 
 import groovy.xml.QName;
-import br.gov.serpro.wsdl2pl.parser.Context;
+import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.util.U;
 
 public class XsdTypeDef implements ITypeDef
@@ -27,14 +27,6 @@ public class XsdTypeDef implements ITypeDef
     }
 
     @Override
-    public String getPlType()
-    {
-        // return Utils.baseTypeToPlType(xsdType) + (required && false ? " NOT NULL" : "");
-        // return U.baseTypeToPlType(xsdType.getLocalPart());
-        return super.toString();
-    }
-
-    @Override
     public void setRequired(boolean required)
     {
         this.required = required;
@@ -48,12 +40,6 @@ public class XsdTypeDef implements ITypeDef
     public void setContext(Context context)
     {
         this.context = context;
-    }
-
-    @Override
-    public String toString()
-    {
-        return getPlType();
     }
 
     @Override

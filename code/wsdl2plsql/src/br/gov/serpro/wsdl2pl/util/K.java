@@ -4,14 +4,6 @@ import br.gov.serpro.wsdl2pl.type.ElementInfo;
 
 public interface K
 {
-    String TYPE_PREFFIX = "tp_rc_";
-    String ARRAY_PREFFIX = "tp_va_";
-    String FUNCTION_PREFFIX = "fc_";
-
-    String TYPE_SUFFIX = "_t";
-    String ARRAY_SUFFIX = "_a";
-
-    String PROPERTY_STYLE = "style";
 
     public static interface Protocol
     {
@@ -26,7 +18,17 @@ public interface K
             String ENVELOPE = "Envelope";
             String HEADER = "Header";
             String BODY = "Body";
+            // soap 1.2 fault
             String FAULT = "Fault";
+            String CODE = "Code";
+            String VALUE = "Value";
+            String REASON = "Reason";
+            String NODE = "Node";
+            String DETAIL = "Detail";
+            // soap 1.1 fault
+            String FAULT_CODE = "faultcode";
+            String FAULT_STRING = "faultstring";
+            String FAULT_ACTOR = "faultactor";
         }
     }
 
@@ -36,6 +38,16 @@ public interface K
         ElementInfo HEADER = new ElementInfo(Tag.Soap.HEADER, Uri.SOAP_ENVELOPE);
         ElementInfo BODY = new ElementInfo(Tag.Soap.BODY, Uri.SOAP_ENVELOPE);
         ElementInfo FAULT = new ElementInfo(Tag.Soap.FAULT, Uri.SOAP_ENVELOPE);
+        ElementInfo CODE = new ElementInfo(Tag.Soap.CODE, Uri.SOAP_ENVELOPE);
+        ElementInfo VALUE = new ElementInfo(Tag.Soap.VALUE, Uri.SOAP_ENVELOPE);
+        ElementInfo REASON = new ElementInfo(Tag.Soap.REASON, Uri.SOAP_ENVELOPE);
+        ElementInfo NODE = new ElementInfo(Tag.Soap.NODE, Uri.SOAP_ENVELOPE);
+        ElementInfo DETAIL = new ElementInfo(Tag.Soap.DETAIL, Uri.SOAP_ENVELOPE);
+
+        ElementInfo FAULT_CODE = new ElementInfo(Tag.Soap.FAULT_CODE);
+        ElementInfo FAULT_STRING = new ElementInfo(Tag.Soap.FAULT_STRING);
+        ElementInfo FAULT_ACTOR = new ElementInfo(Tag.Soap.FAULT_ACTOR);
+        ElementInfo DETAIL_1_1 = new ElementInfo(Tag.Soap.DETAIL.toLowerCase());
     }
 
     public static interface Style

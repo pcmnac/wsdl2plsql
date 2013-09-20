@@ -1,7 +1,7 @@
 package br.gov.serpro.wsdl2pl.type;
 
+import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.emitter.IKeywordEmitter;
-import br.gov.serpro.wsdl2pl.parser.Context;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 import br.gov.serpro.wsdl2pl.util.SB;
 import br.gov.serpro.wsdl2pl.util.U;

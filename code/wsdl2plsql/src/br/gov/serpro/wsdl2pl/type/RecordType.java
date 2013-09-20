@@ -5,8 +5,8 @@ import groovy.xml.QName;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.emitter.IKeywordEmitter;
-import br.gov.serpro.wsdl2pl.parser.Context;
 import br.gov.serpro.wsdl2pl.type.def.XsdTypeDef;
 import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.util.SB;
@@ -39,7 +39,24 @@ public class RecordType extends Type
     @Override
     public String getId()
     {
-        return new QName(complexType.getSchema().getTargetNamespace(), complexType.getName()).toString();
+        String namespace = complexType.getSchema() != null ? complexType.getSchema().getTargetNamespace() : "";
+        return new QName(namespace, complexType.getName()).toString();
+    }
+
+    public Field getField(ElementInfo elementInfo)
+    {
+        Field result = null;
+
+        for (Field field : getMembers())
+        {
+            if (field.getElement().equals(elementInfo))
+            {
+                result = field;
+                break;
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -94,7 +111,8 @@ public class RecordType extends Type
     {
         ComplexType complexType = getComplexType();
 
-        return U.toPlIdentifier(getContext().getSymbolNameEmitter().record(getContext().getPrefix(complexType.getQname().getNamespaceURI()),
-                complexType.getQname().getLocalPart()));
+        return U.toPlIdentifier(getContext().getSymbolNameEmitter()
+                .record(getContext().getPrefix(complexType.getQname().getNamespaceURI()),
+                        complexType.getQname().getLocalPart()));
     }
 }

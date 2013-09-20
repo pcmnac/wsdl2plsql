@@ -78,4 +78,10 @@ public interface IKeywordEmitter
 
     String date();
 
+    String exception();
+
+    Object raise();
+
+    Object elseif();
+
 }

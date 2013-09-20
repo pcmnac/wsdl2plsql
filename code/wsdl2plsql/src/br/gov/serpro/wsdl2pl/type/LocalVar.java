@@ -1,6 +1,6 @@
 package br.gov.serpro.wsdl2pl.type;
 
-import br.gov.serpro.wsdl2pl.parser.Context;
+import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.util.U;
 
 public class LocalVar extends Symbol
