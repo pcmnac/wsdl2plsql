@@ -23,22 +23,18 @@ import br.gov.serpro.wsdl2pl.util.U;
 
 public class FunctionBodyWriter extends BaseWriter
 {
-    private Context context;
-
-    private static final int INDENT = 1;
-
     public FunctionBodyWriter(Context context)
     {
-        this.context = context;
+        super(context);
     }
 
     public String writeFunctionsBody() throws IOException
     {
         SB functions = new SB();
-        IKeywordEmitter ke = context.getKeywordEmitter();
+        IKeywordEmitter ke = getContext().getKeywordEmitter();
 
         // TODO: tratar
-        String packageName = context.getPackageName();
+        String packageName = getContext().getPackageName();
 
         // CREATE OR REPLACE PACKAGE BODY packageName AS
         functions.l("%s %s %s %s %s\n", ke.createOrReplace(), ke.packageKey(), ke.body(), packageName, ke.as());
@@ -46,9 +42,9 @@ public class FunctionBodyWriter extends BaseWriter
         functions.a(generatePostFunction());
         functions.a("\n");
 
-        if (!context.getPlFunctions().isEmpty())
+        if (!getContext().getPlFunctions().isEmpty())
         {
-            for (Function function : context.getPlFunctions())
+            for (Function function : getContext().getPlFunctions())
             {
                 functions.l(INDENT, "-- " + function.comments());
                 functions.a(writeFunctionBody(function) + "\n");
@@ -63,23 +59,23 @@ public class FunctionBodyWriter extends BaseWriter
 
     private String toQName(ElementInfo element)
     {
-        return context.toQName(element.getName(), element.getNamespace());
+        return getContext().toQName(element.getName(), element.getNamespace());
     }
 
     private String writeFunctionBody(Function function)
     {
-        IKeywordEmitter ke = context.getKeywordEmitter();
+        IKeywordEmitter ke = getContext().getKeywordEmitter();
         SB body = new SB();
 
-        LocalVar varResult = new LocalVar(context, "result", function.getReturnType().emit(), function.getId());
-        LocalVar varRequest = new LocalVar(context, "request", ke.clob(), function.getId());
-        LocalVar varResponseText = new LocalVar(context, "responseText", ke.clob(), function.getId());
-        LocalVar varResponse = new LocalVar(context, "response", ke.xmlType(), function.getId());
-        LocalVar varResponseHeader = new LocalVar(context, "responseHeader", ke.xmlType(), function.getId());
-        LocalVar varResponseBody = new LocalVar(context, "responseBody", ke.xmlType(), function.getId());
-        LocalVar varResponseFault = new LocalVar(context, "responseFault", ke.xmlType(), function.getId());
-        LocalVar varNsMap = new LocalVar(context, "nsMap", ke.clob(), function.getId());
-        LocalVar varTempNode = new LocalVar(context, "tempNode", ke.xmlType(), function.getId());
+        LocalVar varResult = new LocalVar(getContext(), "result", function.getReturnType().emit(), function.getId());
+        LocalVar varRequest = new LocalVar(getContext(), "request", ke.clob(), function.getId());
+        LocalVar varResponseText = new LocalVar(getContext(), "responseText", ke.clob(), function.getId());
+        LocalVar varResponse = new LocalVar(getContext(), "response", ke.xmlType(), function.getId());
+        LocalVar varResponseHeader = new LocalVar(getContext(), "responseHeader", ke.xmlType(), function.getId());
+        LocalVar varResponseBody = new LocalVar(getContext(), "responseBody", ke.xmlType(), function.getId());
+        LocalVar varResponseFault = new LocalVar(getContext(), "responseFault", ke.xmlType(), function.getId());
+        LocalVar varNsMap = new LocalVar(getContext(), "nsMap", ke.clob(), function.getId());
+        LocalVar varTempNode = new LocalVar(getContext(), "tempNode", ke.xmlType(), function.getId());
 
         body.l("%s %s", function.decl(INDENT), ke.as());
 
@@ -94,7 +90,7 @@ public class FunctionBodyWriter extends BaseWriter
         body.l(INDENT + 1, varResponseBody.decl());
         body.l(INDENT + 1, varResponseFault.decl());
         body.l(INDENT + 1, varTempNode.decl());
-        body.l(INDENT + 1, varNsMap.decl("'" + context.generateNamespaceDeclarations() + "'"));
+        body.l(INDENT + 1, varNsMap.decl("'" + getContext().generateNamespaceDeclarations() + "'"));
 
         body.l(INDENT, ke.begin());
 
@@ -152,8 +148,8 @@ public class FunctionBodyWriter extends BaseWriter
                 toQName(K.Elem.ENVELOPE), toQName(K.Elem.BODY), toQName(K.Elem.FAULT), varNsMap.name(), ke.then());
 
         String pathPrefix = String.format("/%s/%s", toQName(K.Elem.ENVELOPE), toQName(K.Elem.BODY));
-        body.a(generateResultExtractString(varResponse, varNsMap, varTempNode, "", context.getSoapFaultException()
-                .getType(), context.getSoapFaultException().varName(), pathPrefix, K.Elem.FAULT, null, INDENT + 2));
+        body.a(generateResultExtractString(varResponse, varNsMap, varTempNode, "", getContext().getSoapFaultException()
+                .getType(), getContext().getSoapFaultException().varName(), pathPrefix, K.Elem.FAULT, null, INDENT + 2));
 
         body.l();
 
@@ -169,11 +165,11 @@ public class FunctionBodyWriter extends BaseWriter
                 }
 
                 ElementInfo detailElement = null;
-                if (context.getProtocol().equals(K.Protocol.SOAP_1_1))
+                if (getContext().getProtocol().equals(K.Protocol.SOAP_1_1))
                 {
                     detailElement = K.Elem.DETAIL_1_1;
                 }
-                else if (context.getProtocol().equals(K.Protocol.SOAP_1_2))
+                else if (getContext().getProtocol().equals(K.Protocol.SOAP_1_2))
                 {
                     detailElement = K.Elem.DETAIL;
                 }
@@ -203,7 +199,7 @@ public class FunctionBodyWriter extends BaseWriter
             }
 
             // RAISE err_fault
-            body.l(INDENT + 3, "%s %s;\n", ke.raise(), context.getSoapFaultException().name());
+            body.l(INDENT + 3, "%s %s;\n", ke.raise(), getContext().getSoapFaultException().name());
 
             // END IF;
             body.l(INDENT + 2, "%s %s;\n", ke.end(), ke.ifKey());
@@ -212,7 +208,7 @@ public class FunctionBodyWriter extends BaseWriter
         else
         {
             // RAISE err_fault
-            body.l(INDENT + 2, "%s %s;\n", ke.raise(), context.getSoapFaultException().name());
+            body.l(INDENT + 2, "%s %s;\n", ke.raise(), getContext().getSoapFaultException().name());
         }
 
         // END IF;
@@ -246,11 +242,11 @@ public class FunctionBodyWriter extends BaseWriter
             ElementInfo element, int level)
     {
         SB body = new SB();
-        IKeywordEmitter ke = context.getKeywordEmitter();
+        IKeywordEmitter ke = getContext().getKeywordEmitter();
 
         if (type instanceof ComplexTypeDef)
         {
-            RecordType recordType = (RecordType) context.getComplexTypeMap().get(type.getId());
+            RecordType recordType = (RecordType) getContext().getComplexTypeMap().get(type.getId());
 
             if (element.isOptional())
             {
@@ -259,7 +255,7 @@ public class FunctionBodyWriter extends BaseWriter
                 // DECLARE
                 body.l(level, ke.declare());
 
-                LocalVar recordXml = new LocalVar(context, "recordXml" + level, ke.varchar2() + "(32767)", "");
+                LocalVar recordXml = new LocalVar(getContext(), "recordXml" + level, ke.varchar2() + "(32767)", "");
                 body.l(level + 1, recordXml.decl());
 
                 // BEGIN
@@ -309,7 +305,7 @@ public class FunctionBodyWriter extends BaseWriter
         }
         else if (type instanceof ArrayTypeDef)
         {
-            VarrayType varrayType = (VarrayType) context.getComplexTypeMap().get(type.getId());
+            VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
 
             int baseLevel = level - INDENT;
             body.l(level, "'';\n");
@@ -373,11 +369,11 @@ public class FunctionBodyWriter extends BaseWriter
             String prefix, ITypeDef type, String name, String pathPrefix, ElementInfo element, String loopVar, int level)
     {
         SB body = new SB();
-        IKeywordEmitter ke = context.getKeywordEmitter();
+        IKeywordEmitter ke = getContext().getKeywordEmitter();
 
         if (type instanceof ComplexTypeDef)
         {
-            RecordType recordType = (RecordType) context.getComplexTypeMap().get(type.getId());
+            RecordType recordType = (RecordType) getContext().getComplexTypeMap().get(type.getId());
             for (Field field : recordType.getMembers())
             {
                 String fieldName = field.name();
@@ -388,7 +384,7 @@ public class FunctionBodyWriter extends BaseWriter
         }
         else if (type instanceof ArrayTypeDef)
         {
-            VarrayType varrayType = (VarrayType) context.getComplexTypeMap().get(type.getId());
+            VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
             int baseLevel = level - INDENT;
 
             String loopVarName = "i" + level;

@@ -10,6 +10,7 @@ import br.gov.serpro.wsdl2pl.parser.TypesParser;
 import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.writer.FunctionBodyWriter;
 import br.gov.serpro.wsdl2pl.writer.SpecWriter;
+import br.gov.serpro.wsdl2pl.writer.TestsWriter;
 
 import com.predic8.wsdl.Definitions;
 import com.predic8.wsdl.WSDLParser;
@@ -35,6 +36,7 @@ public class wsdl2plsql implements Runnable
         new File(destDir).mkdirs();
         File specFileName = new File(destDir + File.separator + packageName.toUpperCase() + "_spc.sql");
         File bodyFileName = new File(destDir + File.separator + packageName.toUpperCase() + ".sql");
+        File testsFileName = new File(destDir + File.separator + packageName.toUpperCase() + "_test.sql");
 
         Definitions defs = parser.parse(wsdlUrl);
 
@@ -48,6 +50,7 @@ public class wsdl2plsql implements Runnable
 
         FileWriter specFileWriter = null;
         FileWriter bodyWriter = null;
+        FileWriter testsWriter = null;
 
         try
         {
@@ -57,6 +60,7 @@ public class wsdl2plsql implements Runnable
 
             specFileWriter = new FileWriter(specFileName);
             bodyWriter = new FileWriter(bodyFileName);
+            testsWriter = new FileWriter(testsFileName);
 
             OperationsParser operationsParser = new OperationsParser(context);
             operationsParser.parse();
@@ -67,8 +71,13 @@ public class wsdl2plsql implements Runnable
             FunctionBodyWriter functionBodyWriter = new FunctionBodyWriter(context);
             bodyWriter.write(functionBodyWriter.writeFunctionsBody());
 
-            System.out.println(String.format("\nWSDL parsed successfully!\n\nFiles generated:\n  - %s\n  - %s",
-                    specFileName.getCanonicalPath(), bodyFileName.getCanonicalPath()));
+            TestsWriter testWriter = new TestsWriter(context);
+            testsWriter.write(testWriter.write());
+
+            System.out
+                    .println(String.format("\nWSDL parsed successfully!\n\nFiles generated:\n  - %s\n  - %s\n  - %s",
+                            specFileName.getCanonicalPath(), bodyFileName.getCanonicalPath(),
+                            testsFileName.getCanonicalPath()));
 
         }
         catch (Exception e)
@@ -88,6 +97,14 @@ public class wsdl2plsql implements Runnable
             try
             {
                 bodyWriter.close();
+            }
+            catch (Exception e)
+            {
+            }
+
+            try
+            {
+                testsWriter.close();
             }
             catch (Exception e)
             {

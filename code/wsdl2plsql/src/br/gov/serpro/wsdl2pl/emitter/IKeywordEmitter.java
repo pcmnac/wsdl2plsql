@@ -84,4 +84,10 @@ public interface IKeywordEmitter
 
     Object elseif();
 
+    String when();
+
+    String others();
+
+    Object extend();
+
 }

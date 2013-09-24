@@ -10,20 +10,18 @@ import br.gov.serpro.wsdl2pl.util.SB;
 
 public class SpecWriter extends BaseWriter
 {
-    private Context context;
-
     public SpecWriter(Context context)
     {
-        this.context = context;
+        super(context);
     }
 
     public String writeSpec()
     {
         SB spec = new SB();
-        IKeywordEmitter ke = context.getKeywordEmitter();
+        IKeywordEmitter ke = getContext().getKeywordEmitter();
 
         // TODO: tratar
-        String packageName = context.getPackageName();
+        String packageName = getContext().getPackageName();
 
         // CREATE OR REPLACE PACKAGE packageName AS
         spec.l("%s %s %s %s\n", ke.createOrReplace(), ke.packageKey(), packageName, ke.as());
@@ -31,13 +29,13 @@ public class SpecWriter extends BaseWriter
         // TODO: tratar
         spec.l(1, "-- TYPES\n");
 
-        for (Type plType : context.getComplexTypeMap().values())
+        for (Type plType : getContext().getComplexTypeMap().values())
         {
             spec.l(1, "-- " + plType.comments());
             spec.l(1, plType.forwardDecl() + "\n");
         }
 
-        for (Type plType : context.getComplexTypeMap().values())
+        for (Type plType : getContext().getComplexTypeMap().values())
         {
             spec.l(1, "-- " + plType.comments());
             spec.l(plType.decl(1));
@@ -45,7 +43,7 @@ public class SpecWriter extends BaseWriter
 
         spec.l(1, "-- EXCEPTIONS\n");
 
-        for (Exception exception : context.getExceptions())
+        for (Exception exception : getContext().getExceptions())
         {
             spec.l(1, "-- %s", exception.comments());
             spec.l(1, "%s;", exception.decl());
@@ -55,9 +53,9 @@ public class SpecWriter extends BaseWriter
         // TODO: tratar
         spec.l(1, "-- FUNCTIONS\n");
 
-        if (!context.getPlFunctions().isEmpty())
+        if (!getContext().getPlFunctions().isEmpty())
         {
-            for (Function function : context.getPlFunctions())
+            for (Function function : getContext().getPlFunctions())
             {
                 spec.l(BODY_INDENT, "/**");
                 spec.l(BODY_INDENT, " * " + function.comments());
@@ -90,7 +88,7 @@ public class SpecWriter extends BaseWriter
                     spec.l(BODY_INDENT, " * @throws " + exception.name());
                 }
 
-                spec.l(BODY_INDENT, " * @throws " + context.getSoapFaultException().name());
+                spec.l(BODY_INDENT, " * @throws " + getContext().getSoapFaultException().name());
                 spec.l(BODY_INDENT, " * ");
                 spec.l(BODY_INDENT, " */ ");
                 spec.l(function.decl(BODY_INDENT) + ";\n");

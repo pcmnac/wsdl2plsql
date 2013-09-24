@@ -253,4 +253,22 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
         return "ELSIF";
     }
 
+    @Override
+    public String when()
+    {
+        return "WHEN";
+    }
+
+    @Override
+    public String others()
+    {
+        return "OTHERS";
+    }
+
+    @Override
+    public Object extend()
+    {
+        return "EXTEND";
+    }
+
 }
