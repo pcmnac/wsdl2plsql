@@ -6,7 +6,6 @@ import java.util.List;
 import br.gov.serpro.wsdl2pl.type.ElementInfo;
 import br.gov.serpro.wsdl2pl.type.Function;
 import br.gov.serpro.wsdl2pl.type.Parameter;
-import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 
 import com.predic8.wsdl.AbstractSOAPBody;
 import com.predic8.wsdl.Operation;
@@ -33,16 +32,7 @@ public class RpcStyleOperationParser extends OperationParser
         {
             for (Part part : parts)
             {
-                if (part.getType() != null)
-                {
-                    ElementInfo elementInfo = new ElementInfo(part.getName());
-                    Parameter parameter = new Parameter(getContext(), function, elementInfo);
-
-                    ITypeDef parameterType = getTypeDef(part.getType());
-
-                    parameter.setType(parameterType);
-                    parameters.add(parameter);
-                }
+                parameters.add(partToParam(part, function, Parameter.Direction.IN, false));
             }
         }
         else

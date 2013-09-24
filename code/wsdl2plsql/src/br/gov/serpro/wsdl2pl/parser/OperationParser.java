@@ -100,7 +100,8 @@ public abstract class OperationParser
 
         if (inputSoapHeader != null)
         {
-            partToHeaderParam(inputSoapHeader.getPart(), function, Parameter.Direction.IN);
+            Parameter inHeaderParameter = partToParam(inputSoapHeader.getPart(), function, Parameter.Direction.IN, true);
+            function.setInputHeader(inHeaderParameter);
         }
 
         // OUTPUT
@@ -124,7 +125,9 @@ public abstract class OperationParser
 
         if (outputSoapHeader != null)
         {
-            partToHeaderParam(outputSoapHeader.getPart(), function, Parameter.Direction.OUT);
+            Parameter outHeaderParameter = partToParam(outputSoapHeader.getPart(), function, Parameter.Direction.OUT,
+                    true);
+            function.setOutputHeader(outHeaderParameter);
         }
 
         if (outputSoapBody.getParts().size() == 1)
@@ -229,30 +232,28 @@ public abstract class OperationParser
         return returnType;
     }
 
-    protected void partToHeaderParam(Part part, Function function, Parameter.Direction direction)
+    protected Parameter partToParam(Part part, Function function, Parameter.Direction direction, boolean header)
     {
         Parameter param = null;
         if (part.getType() != null)
         {
-            param = new Parameter(getContext(), function, new ElementInfo(part.getName()), direction, true);
+            param = new Parameter(getContext(), function, new ElementInfo(part.getName()), direction, header);
             param.setType(getTypeDef(part.getType()));
 
         }
         else if (part.getElement() != null)
         {
-            Element outputHeaderElement = getContext().findElement(part.getElement());
-            param = new Parameter(getContext(), function, new ElementInfo(outputHeaderElement), direction, true);
-            param.setType(getTypeDef(outputHeaderElement.getType()));
+            Element element = getContext().findElement(part.getElement());
+            param = new Parameter(getContext(), function, new ElementInfo(element), direction, header);
+            param.setType(getTypeDef(element.getType()));
         }
 
-        if (param != null)
+        if (param == null)
         {
-            function.setOutputHeader(param);
+            throw new RuntimeException("Part doesn't have neither type nor element attributes");
         }
-        else
-        {
-            throw new RuntimeException("Header part doesn't have type neither element attributes");
-        }
+
+        return param;
 
     }
 
