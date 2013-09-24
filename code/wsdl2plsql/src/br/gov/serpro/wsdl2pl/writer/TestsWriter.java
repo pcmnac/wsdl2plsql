@@ -16,6 +16,7 @@ import br.gov.serpro.wsdl2pl.type.VarrayType;
 import br.gov.serpro.wsdl2pl.type.def.ArrayTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ComplexTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
+import br.gov.serpro.wsdl2pl.type.def.XsdTypeDef;
 import br.gov.serpro.wsdl2pl.util.SB;
 import br.gov.serpro.wsdl2pl.util.U;
 
@@ -41,7 +42,7 @@ public class TestsWriter extends BaseWriter
         for (Function function : getContext().getPlFunctions())
         {
             // result
-            LocalVar varResult = new LocalVar(getContext(), "result", pkg + "." + function.getReturnType().emit(),
+            LocalVar varResult = new LocalVar(getContext(), "result", addPrefix(pkg, function.getReturnType()),
                     function.getId());
 
             List<LocalVar> params = new ArrayList<LocalVar>();
@@ -49,20 +50,20 @@ public class TestsWriter extends BaseWriter
             for (int i = 0; i < function.getParameters().size(); i++)
             {
                 Parameter parameter = function.getParameters().get(i);
-                params.add(new LocalVar(getContext(), parameter.getElement().getName(), pkg + "."
-                        + parameter.getType().emit(), function.getId()));
+                params.add(new LocalVar(getContext(), parameter.getElement().getName(), addPrefix(pkg,
+                        parameter.getType()), function.getId()));
             }
 
             if (function.getInputHeader() != null)
             {
-                params.add(new LocalVar(getContext(), function.getInputHeader().getElement().getName(), pkg + "."
-                        + function.getInputHeader().getType().emit(), function.getId()));
+                params.add(new LocalVar(getContext(), function.getInputHeader().getElement().getName(), addPrefix(pkg,
+                        function.getInputHeader().getType()), function.getId()));
             }
 
             if (function.getOutputHeader() != null)
             {
-                params.add(new LocalVar(getContext(), function.getOutputHeader().getElement().getName(), pkg + "."
-                        + function.getOutputHeader().getType().emit(), function.getId()));
+                params.add(new LocalVar(getContext(), function.getOutputHeader().getElement().getName(), addPrefix(pkg,
+                        function.getOutputHeader().getType()), function.getId()));
             }
 
             tests.l(l, "-- test skeleton for: %s", function.name());
@@ -207,6 +208,17 @@ public class TestsWriter extends BaseWriter
         }
 
         return block.toString();
+    }
+
+    private String addPrefix(String pkg, ITypeDef type)
+    {
+        String result = type.emit();
+        if (!(type instanceof XsdTypeDef))
+        {
+            result = pkg + "." + result;
+        }
+
+        return result;
     }
 
     private String dump(String var, ITypeDef type, int indent, int depth)
