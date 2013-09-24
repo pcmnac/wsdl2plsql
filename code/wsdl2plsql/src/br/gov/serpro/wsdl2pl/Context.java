@@ -262,7 +262,7 @@ public class Context
                         setProtocol(protocol);
                         if (preferredProtocol == null || protocol.equals(preferredProtocol))
                         {
-                            break;
+                            return;
                         }
                     }
                 }
