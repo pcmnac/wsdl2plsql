@@ -224,7 +224,8 @@ public abstract class OperationParser
 
             if (complexType.getSequence().getElements().size() != 1)
             {
-                throw new ParsingException("Unknown format: Return complex type should be only one child");
+                throw new ParsingException("Unknown format: Return complex type should be only one child:"
+                        + complexType);
             }
 
             returnType = getTypeDef(complexType.getSequence().getElements().get(0).getType());

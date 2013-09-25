@@ -112,7 +112,7 @@ public class FunctionBodyWriter extends BaseWriter
         }
 
         body.l(INDENT + 3, "'<" + toQName(K.Elem.BODY) + ">' ||");
-        body.l(INDENT + 4, "'<" + toQName(function.getElement()) + ">' ||");
+        body.a(INDENT + 4, "'<" + toQName(function.getElement()) + ">' ||");
 
         if (!function.getParameters().isEmpty())
         {
@@ -129,6 +129,7 @@ public class FunctionBodyWriter extends BaseWriter
             }
         }
 
+        body.l();
         body.l(INDENT + 4, "'</" + toQName(function.getElement()) + ">' ||");
         body.l(INDENT + 3, "'</" + toQName(K.Elem.BODY) + ">' ||");
         body.l(INDENT + 2, "'</" + toQName(K.Elem.ENVELOPE) + ">';");
@@ -290,6 +291,7 @@ public class FunctionBodyWriter extends BaseWriter
             }
             else
             {
+                body.l();
                 body.a(level, "'<" + toQName(element) + ">' || ");
 
                 for (Field field : recordType.getMembers())
