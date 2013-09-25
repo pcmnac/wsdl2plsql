@@ -134,7 +134,7 @@ public abstract class OperationParser
         {
             Part part = outputSoapBody.getParts().get(0);
             function.setReturnType(extractReturnType(part));
-            function.setReturnElement(new ElementInfo(part.getName()));
+            function.setReturnElement(getResultElement(part));
         }
         else
         {
@@ -152,6 +152,8 @@ public abstract class OperationParser
     }
 
     protected abstract Function createFunctionAndInputParameters(Operation operation, AbstractSOAPBody inputSoapBody);
+
+    protected abstract ElementInfo getResultElement(Part part);
 
     protected ITypeDef getTypeDef(QName type)
     {

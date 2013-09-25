@@ -20,7 +20,7 @@
       wl_length := NVL(length(wp_data), 0);
       
       -- dbms_output.put_line('CONNECTING TO: ' || wp_url);
-      -- dbms_output.put_line('REQUEST: ' || wp_data);
+      dbms_output.put_line('REQUEST: ' || wp_data);
   
       -- configure HTTP
       utl_http.set_response_error_check(enable => FALSE);
@@ -48,7 +48,7 @@
               wl_response.status_code || ' - ' || wl_response.reason_phrase
           );
       END IF;
-  
+
       -- get response
       dbms_lob.createtemporary(wl_buffer, FALSE);
       wl_response := utl_http.get_response(wl_request);
@@ -62,7 +62,7 @@
       END;
       utl_http.end_response(wl_response);
       
-      -- dbms_output.put_line('RESPONSE: ' || wl_buffer); 
+      dbms_output.put_line('RESPONSE: ' || wl_buffer); 
   
       RETURN wl_buffer;
   

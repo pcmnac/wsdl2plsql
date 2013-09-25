@@ -396,19 +396,23 @@ public class FunctionBodyWriter extends BaseWriter
             body.l(baseLevel + 2, "%s %s := 1;", loopVarName, ke.number());
             // BEGIN
             body.l(baseLevel + 1, ke.begin());
+            
+            body.l(baseLevel + 2, "-- initializes %s", prefix + name);
+            body.l(baseLevel + 2, "%s := %s();\n", prefix + name, type.emit());
+            
             // WHILE response.existsNode('path[i]') = 1 LOOP
             body.l(baseLevel + 2, "%s %s.existsNode('%s/%s[' || %s || ']', %s) = 1 %s", ke.whileKey(), response.name(),
                     pathPrefix, toXPathNode(element, null), loopVarName, varNsMap.name(), ke.loop());
 
-            // IF varray IS NULL THEN
-            body.l();
-            body.l(baseLevel + 3, "-- if %s was not initialized yet...", prefix + name);
-            body.l(baseLevel + 3, "%s %s %s %s %s", ke.ifKey(), prefix + name, ke.is(), ke.nullKey(), ke.then());
-            // varray = vaType();
-            body.l(baseLevel + 4, "-- initializes %s", prefix + name);
-            body.l(baseLevel + 4, "%s := %s();", prefix + name, type.emit());
-            // END IF;
-            body.l(baseLevel + 3, "%s %s;\n", ke.end(), ke.ifKey());
+//            // IF varray IS NULL THEN
+//            body.l();
+//            body.l(baseLevel + 3, "-- if %s was not initialized yet...", prefix + name);
+//            body.l(baseLevel + 3, "%s %s %s %s %s", ke.ifKey(), prefix + name, ke.is(), ke.nullKey(), ke.then());
+//            // varray = vaType();
+//            body.l(baseLevel + 4, "-- initializes %s", prefix + name);
+//            body.l(baseLevel + 4, "%s := %s();", prefix + name, type.emit());
+//            // END IF;
+//            body.l(baseLevel + 3, "%s %s;\n", ke.end(), ke.ifKey());
 
             body.l(baseLevel + 3, "-- extends varray %s", prefix + name);
             body.l(baseLevel + 3, "%s.extend(1);", prefix + name);

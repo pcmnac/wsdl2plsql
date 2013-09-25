@@ -3,6 +3,7 @@ package br.gov.serpro.wsdl2pl.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.gov.serpro.wsdl2pl.exception.ParsingException;
 import br.gov.serpro.wsdl2pl.type.ElementInfo;
 import br.gov.serpro.wsdl2pl.type.Function;
 import br.gov.serpro.wsdl2pl.type.Parameter;
@@ -83,5 +84,31 @@ public class DocumentStyleOperationParser extends OperationParser
         }
 
         return function;
+    }
+
+    @Override
+    protected ElementInfo getResultElement(Part part)
+    {
+        ElementInfo elementInfo = null;
+
+        if (part.getElement() != null)
+        {
+            Element resultElement = getContext().findElement(part.getElement());
+            ComplexType complexType = getComplexType(resultElement);
+
+            if (complexType.getSequence().getElements().size() != 1)
+            {
+                throw new ParsingException("Unknown format: Return complex type should be only one child");
+            }
+
+            elementInfo = new ElementInfo(complexType.getSequence().getElements().get(0));
+        }
+        else
+        {
+            throw new ParsingException(
+                    "In document/wrapped style, result part element must be a complex type with a single element");
+        }
+
+        return elementInfo;
     }
 }

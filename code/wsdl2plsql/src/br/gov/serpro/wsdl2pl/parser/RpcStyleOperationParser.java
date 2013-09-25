@@ -7,6 +7,7 @@ import br.gov.serpro.wsdl2pl.type.ElementInfo;
 import br.gov.serpro.wsdl2pl.type.Function;
 import br.gov.serpro.wsdl2pl.type.Parameter;
 
+import com.predic8.schema.Element;
 import com.predic8.wsdl.AbstractSOAPBody;
 import com.predic8.wsdl.Operation;
 import com.predic8.wsdl.Part;
@@ -50,5 +51,23 @@ public class RpcStyleOperationParser extends OperationParser
         Function function = new Function(getContext(), elementInfo);
         function.getParameters().addAll(extractParameters(inputSoapBody.getParts(), function));
         return function;
+    }
+
+    @Override
+    protected ElementInfo getResultElement(Part part)
+    {
+        ElementInfo elementInfo = null;
+
+        if (part.getElement() != null)
+        {
+            Element resultElement = getContext().findElement(part.getElement());
+            elementInfo = new ElementInfo(resultElement);
+        }
+        else
+        {
+            elementInfo = new ElementInfo(part.getName());
+        }
+
+        return elementInfo;
     }
 }

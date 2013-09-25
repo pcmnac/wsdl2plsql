@@ -16,7 +16,6 @@ import br.gov.serpro.wsdl2pl.type.VarrayType;
 import br.gov.serpro.wsdl2pl.type.def.ArrayTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ComplexTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
-import br.gov.serpro.wsdl2pl.type.def.XsdTypeDef;
 import br.gov.serpro.wsdl2pl.util.SB;
 import br.gov.serpro.wsdl2pl.util.U;
 
@@ -114,6 +113,8 @@ public class TestsWriter extends BaseWriter
                 }
             }
 
+            tests.l(fill(varResult.name(), function.getReturnType(), l + 1));
+
             // call
             tests.l(l + 1, "dbms_output.put_line('---------------------------');");
             tests.l(l + 1, "dbms_output.put_line('Invoking %s()');", function.name());
@@ -194,10 +195,14 @@ public class TestsWriter extends BaseWriter
             VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
 
             String loopVarName = "i" + depth;
-            // FOR i IN 1..3 LOOP
-            block.l(depth, "%s %s %s 1..3 %s", ke.forKey(), loopVarName, ke.in(), ke.loop());
 
-            block.l(depth, "%s.%s(1);", var + "(" + loopVarName + ")", ke.extend());
+            // init varray
+            block.l(depth, "%s := %s();\n", var, addPrefix(getContext().getPackageName(), type), ke.in(), ke.loop());
+
+            // FOR i IN 1..3 LOOP
+            block.l(depth, "%s %s %s 1..3 %s\n", ke.forKey(), loopVarName, ke.in(), ke.loop());
+
+            block.l(depth + 1, "%s.%s(1);", var, ke.extend());
             block.l(fill(var + "(" + loopVarName + ")", varrayType.getType(), depth + 1));
 
             block.l(depth, "%s %s;", ke.end(), ke.loop());
@@ -213,7 +218,7 @@ public class TestsWriter extends BaseWriter
     private String addPrefix(String pkg, ITypeDef type)
     {
         String result = type.emit();
-        if (!(type instanceof XsdTypeDef))
+        if ((type instanceof ComplexTypeDef) || (type instanceof ArrayTypeDef))
         {
             result = pkg + "." + result;
         }
@@ -223,10 +228,18 @@ public class TestsWriter extends BaseWriter
 
     private String dump(String var, ITypeDef type, int indent, int depth)
     {
+        return dump(var, type, indent, depth, null);
+    }
+
+    private String dump(String var, ITypeDef type, int indent, int depth, String varOutName)
+    {
         SB block = new SB();
         IKeywordEmitter ke = getContext().getKeywordEmitter();
 
-        String varName = var.indexOf('.') != -1 ? var.substring(var.lastIndexOf('.') + 1) : var;
+        String varName = varOutName != null ? varOutName : (var.indexOf('.') != -1 ? var
+                .substring(var.lastIndexOf('.') + 1) : var);
+
+        // String varName = var.indexOf('.') != -1 ? var.substring(var.lastIndexOf('.') + 1) : var;
 
         if (type instanceof ComplexTypeDef)
         {
@@ -246,11 +259,12 @@ public class TestsWriter extends BaseWriter
 
             String loopVarName = "i" + indent;
 
-            block.l(indent, "dbms_output.put_line('%s%s (varray):');", indent(depth), varName);
+            block.l(indent, "dbms_output.put_line('%s%s [varray]:');", indent(depth), varName);
             // FOR i IN 1..varray.COUNT LOOP
             block.l(indent, "%s %s %s 1..%s.%s %s", ke.forKey(), loopVarName, ke.in(), var, ke.count(), ke.loop());
             block.l();
-            block.l(dump(var + "(" + loopVarName + ")", varrayType.getType(), indent + 1, depth + 1));
+            block.l(dump(var + "(" + loopVarName + ")", varrayType.getType(), indent + 1, depth + 1, varName + "(' || "
+                    + loopVarName + " || ')"));
 
             block.l(indent, "%s %s;", ke.end(), ke.loop());
         }
