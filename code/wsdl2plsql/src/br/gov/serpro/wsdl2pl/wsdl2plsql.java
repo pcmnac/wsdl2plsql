@@ -14,6 +14,8 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.MissingOptionException;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
@@ -212,6 +214,21 @@ public class wsdl2plsql implements Runnable
     {
         Options options = new Options();
 
+        Option inputOption = OptionBuilder//
+                .withArgName("src")//
+                .hasArg()//
+                .withLongOpt("wsdl-input")//
+                .withDescription("The location of the WSDL file (it can be a local path or an URL).")//
+                .create("i");
+        options.addOption(inputOption);
+
+        Option nameOption = OptionBuilder//
+                .withArgName("name")//
+                .hasArg()//
+                .withLongOpt("package-name")//
+                .withDescription("PL/SQL Package Name.")//
+                .create("n");
+        options.addOption(nameOption);
         options.addOption(OptionBuilder//
                 .withArgName("path")//
                 .hasArg()//
@@ -220,20 +237,9 @@ public class wsdl2plsql implements Runnable
                 .create("o"));
 
         options.addOption(OptionBuilder//
-                .withArgName("name")//
-                .hasArg()//
-                .withLongOpt("package-name")//
-                .withDescription("PL/SQL Package Name.")//
-                .isRequired()//
-                .create("n"));
-
-        options.addOption(OptionBuilder//
-                .withArgName("src")//
-                .hasArg()//
-                .withLongOpt("wsdl-input")//
-                .withDescription("The location of the WSDL file (it can be a local path or an URL).")//
-                .isRequired()//
-                .create("i"));
+                .withLongOpt("help")//
+                .withDescription("Show this help.")//
+                .create("h"));
 
         options.addOption(OptionBuilder//
                 .withArgName("n")//
@@ -247,7 +253,7 @@ public class wsdl2plsql implements Runnable
                 .withArgName("o1,o2...")//
                 .hasArg()//
                 .withLongOpt("wsdl-operations")//
-                .withDescription("Comma-separated list of operations to include in the generation task.")//
+                .withDescription("Comma-separated list of operations to be included in the generation task.")//
                 .create("wo"));
 
         options.addOption(OptionBuilder//
@@ -255,16 +261,42 @@ public class wsdl2plsql implements Runnable
                 .hasArg()//
                 .withLongOpt("wsdl-operations-file-path")//
                 .withDescription(
-                        "Path to a properties file with the list of operations (one per line) to include in the generation task. Can be used ")//
+                        "Path to a *.properties file with the list of operations (one per line) to be included in the generation task. Can be used ")//
                 .create("wp"));
 
         CommandLineParser parser = new BasicParser();
         try
         {
-            // parse the command line arguments
             CommandLine line = parser.parse(options, args);
 
-            String wsdl = line.getOptionValue('i');
+            if (line.hasOption('h'))
+            {
+                // automatically generate the help statement
+                HelpFormatter formatter = new HelpFormatter();
+
+                formatter.printHelp(120, "java -jar wsdl2plsql.jar", "", options, "", true);
+                return;
+            }
+
+            List<Option> missingOptions = new ArrayList<Option>();
+
+            if (!line.hasOption('i'))
+            {
+                missingOptions.add(inputOption);
+            }
+
+            if (!line.hasOption('n'))
+            {
+                missingOptions.add(nameOption);
+
+            }
+
+            if (!missingOptions.isEmpty())
+            {
+                throw new MissingOptionException(missingOptions);
+            }
+
+            String wsdl = line.getOptionValue("i");
             String packageName = line.getOptionValue('n');
             String dest = line.getOptionValue('o', ".");
 
@@ -283,7 +315,6 @@ public class wsdl2plsql implements Runnable
                 properties.load(new FileInputStream(line.getOptionValue("wp")));
 
                 operations.addAll(properties.stringPropertyNames());
-
             }
 
             if (line.hasOption('p'))
