@@ -90,4 +90,6 @@ public interface IKeywordEmitter
 
     Object extend();
 
+    String procedure();
+
 }

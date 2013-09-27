@@ -44,10 +44,41 @@ public class FunctionBodyWriter extends BaseWriter
 
         if (!getContext().getPlFunctions().isEmpty())
         {
+
+            getContext().registerUsedException(getContext().getSoapFaultException());
+
             for (Function function : getContext().getPlFunctions())
             {
-                functions.l(INDENT, "-- " + function.comments());
-                functions.a(writeFunctionBody(function) + "\n");
+                if (getContext().isElegible(function))
+                {
+                    if (!function.isVoid())
+                    {
+                        getContext().registerUsedType(function.getReturnType());
+                    }
+
+                    if (function.getInputHeader() != null)
+                    {
+                        getContext().registerUsedType(function.getInputHeader().getType());
+                    }
+
+                    if (function.getOutputHeader() != null)
+                    {
+                        getContext().registerUsedType(function.getOutputHeader().getType());
+                    }
+
+                    for (Parameter parameter : function.getParameters())
+                    {
+                        getContext().registerUsedType(parameter.getType());
+                    }
+
+                    for (Exception exception : function.getExceptions())
+                    {
+                        getContext().registerUsedException(exception);
+                    }
+
+                    functions.l(INDENT, "-- " + function.comments());
+                    functions.a(writeFunctionBody(function) + "\n");
+                }
             }
         }
 
@@ -67,7 +98,11 @@ public class FunctionBodyWriter extends BaseWriter
         IKeywordEmitter ke = getContext().getKeywordEmitter();
         SB body = new SB();
 
-        LocalVar varResult = new LocalVar(getContext(), "result", function.getReturnType().emit(), function.getId());
+        LocalVar varResult = null;
+        if (!function.isVoid())
+        {
+            varResult = new LocalVar(getContext(), "result", function.getReturnType().emit(), function.getId());
+        }
         LocalVar varRequest = new LocalVar(getContext(), "request", ke.clob(), function.getId());
         LocalVar varResponseText = new LocalVar(getContext(), "responseText", ke.clob(), function.getId());
         LocalVar varResponse = new LocalVar(getContext(), "response", ke.xmlType(), function.getId());
@@ -77,9 +112,14 @@ public class FunctionBodyWriter extends BaseWriter
         LocalVar varNsMap = new LocalVar(getContext(), "nsMap", ke.clob(), function.getId());
         LocalVar varTempNode = new LocalVar(getContext(), "tempNode", ke.xmlType(), function.getId());
 
-        body.l("%s %s", function.decl(INDENT), ke.as());
+        // FUNCTION ...
+        body.l("%s", function.decl(INDENT, false));
+        body.l(INDENT, ke.as());
 
-        body.l(INDENT + 1, varResult.decl());
+        if (!function.isVoid())
+        {
+            body.l(INDENT + 1, varResult.decl());
+        }
         body.l(INDENT + 1, varRequest.decl());
         body.l(INDENT + 1, varResponseText.decl());
         body.l(INDENT + 1, varResponse.decl());
@@ -230,10 +270,14 @@ public class FunctionBodyWriter extends BaseWriter
         body.l(INDENT + 1, "%s := %s.extract('/%s/%s/*/child::node()', %s);", varResponseBody.name(),
                 varResponse.name(), toQName(K.Elem.ENVELOPE), toQName(K.Elem.BODY), varNsMap.name());
 
-        body.l(generateResultExtractString(varResponseBody, varNsMap, varTempNode, "", function.getReturnType(),
-                varResult.name(), "", function.getReturnElement(), null, INDENT + 1));
+        if (!function.isVoid())
+        {
+            body.l(generateResultExtractString(varResponseBody, varNsMap, varTempNode, "", function.getReturnType(),
+                    varResult.name(), "", function.getReturnElement(), null, INDENT + 1));
 
-        body.l(INDENT + 1, "%s %s;", ke.returnKey(), varResult.name());
+            body.l(INDENT + 1, "%s %s;", ke.returnKey(), varResult.name());
+        }
+
         body.l(INDENT, "%s %s;", ke.end(), function.name());
 
         return body.toString();
@@ -245,9 +289,11 @@ public class FunctionBodyWriter extends BaseWriter
         SB body = new SB();
         IKeywordEmitter ke = getContext().getKeywordEmitter();
 
+        getContext().registerUsedType(type);
+
         if (type instanceof ComplexTypeDef)
         {
-            RecordType recordType = (RecordType) getContext().getComplexTypeMap().get(type.getId());
+            RecordType recordType = (RecordType) getContext().getCustomType(type.getId());
 
             if (element.isOptional())
             {
@@ -307,7 +353,7 @@ public class FunctionBodyWriter extends BaseWriter
         }
         else if (type instanceof ArrayTypeDef)
         {
-            VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
+            VarrayType varrayType = (VarrayType) getContext().getCustomType(type.getId());
 
             int baseLevel = level - INDENT;
             body.l(level, "'';\n");
@@ -372,10 +418,11 @@ public class FunctionBodyWriter extends BaseWriter
     {
         SB body = new SB();
         IKeywordEmitter ke = getContext().getKeywordEmitter();
+        getContext().registerUsedType(type);
 
         if (type instanceof ComplexTypeDef)
         {
-            RecordType recordType = (RecordType) getContext().getComplexTypeMap().get(type.getId());
+            RecordType recordType = (RecordType) getContext().getCustomType(type.getId());
             for (Field field : recordType.getMembers())
             {
                 String fieldName = field.name();
@@ -386,7 +433,7 @@ public class FunctionBodyWriter extends BaseWriter
         }
         else if (type instanceof ArrayTypeDef)
         {
-            VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
+            VarrayType varrayType = (VarrayType) getContext().getCustomType(type.getId());
             int baseLevel = level - INDENT;
 
             String loopVarName = "i" + level;
@@ -398,23 +445,23 @@ public class FunctionBodyWriter extends BaseWriter
             body.l(baseLevel + 2, "%s %s := 1;", loopVarName, ke.number());
             // BEGIN
             body.l(baseLevel + 1, ke.begin());
-            
+
             body.l(baseLevel + 2, "-- initializes %s", prefix + name);
             body.l(baseLevel + 2, "%s := %s();\n", prefix + name, type.emit());
-            
+
             // WHILE response.existsNode('path[i]') = 1 LOOP
             body.l(baseLevel + 2, "%s %s.existsNode('%s/%s[' || %s || ']', %s) = 1 %s", ke.whileKey(), response.name(),
                     pathPrefix, toXPathNode(element, null), loopVarName, varNsMap.name(), ke.loop());
 
-//            // IF varray IS NULL THEN
-//            body.l();
-//            body.l(baseLevel + 3, "-- if %s was not initialized yet...", prefix + name);
-//            body.l(baseLevel + 3, "%s %s %s %s %s", ke.ifKey(), prefix + name, ke.is(), ke.nullKey(), ke.then());
-//            // varray = vaType();
-//            body.l(baseLevel + 4, "-- initializes %s", prefix + name);
-//            body.l(baseLevel + 4, "%s := %s();", prefix + name, type.emit());
-//            // END IF;
-//            body.l(baseLevel + 3, "%s %s;\n", ke.end(), ke.ifKey());
+            // // IF varray IS NULL THEN
+            // body.l();
+            // body.l(baseLevel + 3, "-- if %s was not initialized yet...", prefix + name);
+            // body.l(baseLevel + 3, "%s %s %s %s %s", ke.ifKey(), prefix + name, ke.is(), ke.nullKey(), ke.then());
+            // // varray = vaType();
+            // body.l(baseLevel + 4, "-- initializes %s", prefix + name);
+            // body.l(baseLevel + 4, "%s := %s();", prefix + name, type.emit());
+            // // END IF;
+            // body.l(baseLevel + 3, "%s %s;\n", ke.end(), ke.ifKey());
 
             body.l(baseLevel + 3, "-- extends varray %s", prefix + name);
             body.l(baseLevel + 3, "%s.extend(1);", prefix + name);

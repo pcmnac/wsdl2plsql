@@ -40,131 +40,151 @@ public class TestsWriter extends BaseWriter
         tests.l();
         for (Function function : getContext().getPlFunctions())
         {
-            // result
-            LocalVar varResult = new LocalVar(getContext(), "result", addPrefix(pkg, function.getReturnType()),
-                    function.getId());
-
-            List<LocalVar> params = new ArrayList<LocalVar>();
-            // params
-            for (int i = 0; i < function.getParameters().size(); i++)
+            if (getContext().isElegible(function))
             {
-                Parameter parameter = function.getParameters().get(i);
-                params.add(new LocalVar(getContext(), parameter.getElement().getName(), addPrefix(pkg,
-                        parameter.getType()), function.getId()));
-            }
+                // result
+                LocalVar varResult = null;
 
-            if (function.getInputHeader() != null)
-            {
-                params.add(new LocalVar(getContext(), function.getInputHeader().getElement().getName(), addPrefix(pkg,
-                        function.getInputHeader().getType()), function.getId()));
-            }
-
-            if (function.getOutputHeader() != null)
-            {
-                params.add(new LocalVar(getContext(), function.getOutputHeader().getElement().getName(), addPrefix(pkg,
-                        function.getOutputHeader().getType()), function.getId()));
-            }
-
-            tests.l(l, "-- test skeleton for: %s", function.name());
-            // DECLARE
-            tests.l(l, ke.declare());
-            tests.l();
-            // vars
-            tests.l(l + 1, varResult.decl());
-            for (LocalVar param : params)
-            {
-                tests.l(l + 1, param.decl());
-            }
-            tests.l();
-
-            // BEGIN
-            tests.l(l, ke.begin());
-
-            // fill params
-            tests.l();
-            tests.l(l + 1, "-- fill input parameters");
-
-            boolean inputHeaderFound = false;
-            for (int i = 0; i < params.size(); i++)
-            {
-                LocalVar param = params.get(i);
-
-                Parameter parameter = null;
-                if (i < function.getParameters().size())
+                if (!function.isVoid())
                 {
-                    parameter = function.getParameters().get(i);
+                    varResult = new LocalVar(getContext(), "result", addPrefix(pkg, function.getReturnType()),
+                            function.getId());
                 }
-                else
+
+                List<LocalVar> params = new ArrayList<LocalVar>();
+                // params
+                for (int i = 0; i < function.getParameters().size(); i++)
                 {
-                    if (function.getInputHeader() != null && !inputHeaderFound)
+                    Parameter parameter = function.getParameters().get(i);
+                    params.add(new LocalVar(getContext(), parameter.getElement().getName(), addPrefix(pkg,
+                            parameter.getType()), function.getId()));
+                }
+
+                if (function.getInputHeader() != null)
+                {
+                    params.add(new LocalVar(getContext(), function.getInputHeader().getElement().getName(), addPrefix(
+                            pkg, function.getInputHeader().getType()), function.getId()));
+                }
+
+                if (function.getOutputHeader() != null)
+                {
+                    params.add(new LocalVar(getContext(), function.getOutputHeader().getElement().getName(), addPrefix(
+                            pkg, function.getOutputHeader().getType()), function.getId()));
+                }
+
+                tests.l(l, "-- test skeleton for: %s", function.name());
+                // DECLARE
+                tests.l(l, ke.declare());
+                tests.l();
+                // vars
+                if (!function.isVoid())
+                {
+                    tests.l(l + 1, varResult.decl());
+                }
+                for (LocalVar param : params)
+                {
+                    tests.l(l + 1, param.decl());
+                }
+                tests.l();
+
+                // BEGIN
+                tests.l(l, ke.begin());
+
+                // fill params
+                tests.l();
+                tests.l(l + 1, "-- fill input parameters");
+
+                boolean inputHeaderFound = false;
+                for (int i = 0; i < params.size(); i++)
+                {
+                    LocalVar param = params.get(i);
+
+                    Parameter parameter = null;
+                    if (i < function.getParameters().size())
                     {
-                        parameter = function.getInputHeader();
-                        inputHeaderFound = true;
+                        parameter = function.getParameters().get(i);
                     }
                     else
                     {
-                        parameter = function.getOutputHeader();
+                        if (function.getInputHeader() != null && !inputHeaderFound)
+                        {
+                            parameter = function.getInputHeader();
+                            inputHeaderFound = true;
+                        }
+                        else
+                        {
+                            parameter = function.getOutputHeader();
+                        }
+                    }
+
+                    if (parameter.getDirection().equals(Parameter.Direction.IN))
+                    {
+                        tests.l(fill(param.name(), parameter.getType(), l + 1));
                     }
                 }
 
-                if (parameter.getDirection().equals(Parameter.Direction.IN))
+                // call
+                tests.l(l + 1, "dbms_output.put_line('---------------------------');");
+                tests.l(l + 1, "dbms_output.put_line('Invoking %s()');", function.name());
+
+                if (function.isVoid())
                 {
-                    tests.l(fill(param.name(), parameter.getType(), l + 1));
+                    // procedure
+                    tests.a(l + 1, "%s.%s(", pkg, function.name());
                 }
-            }
-
-            tests.l(fill(varResult.name(), function.getReturnType(), l + 1));
-
-            // call
-            tests.l(l + 1, "dbms_output.put_line('---------------------------');");
-            tests.l(l + 1, "dbms_output.put_line('Invoking %s()');", function.name());
-
-            tests.a(l + 1, "%s := %s.%s(", varResult.name(), pkg, function.name());
-            for (int i = 0; i < params.size(); i++)
-            {
-                LocalVar param = params.get(i);
-                tests.a(param.name());
-                if (i < params.size() - 1)
+                else
                 {
-                    tests.a(", ");
+                    // function
+                    tests.a(l + 1, "%s := %s.%s(", varResult.name(), pkg, function.name());
                 }
-            }
-            tests.l(");\n");
+                for (int i = 0; i < params.size(); i++)
+                {
+                    LocalVar param = params.get(i);
+                    tests.a(param.name());
+                    if (i < params.size() - 1)
+                    {
+                        tests.a(", ");
+                    }
+                }
+                tests.l(");\n");
 
-            tests.l(dump(varResult.name(), function.getReturnType(), l + 1, 0));
+                if (!function.isVoid())
+                {
+                    tests.l(dump(varResult.name(), function.getReturnType(), l + 1, 0));
+                }
 
-            if (function.getOutputHeader() != null)
-            {
-                LocalVar param = params.get(params.size() - 1);
-                tests.l(dump(param.name(), function.getOutputHeader().getType(), l + 1, 0));
-            }
+                if (function.getOutputHeader() != null)
+                {
+                    LocalVar param = params.get(params.size() - 1);
+                    tests.l(dump(param.name(), function.getOutputHeader().getType(), l + 1, 0));
+                }
 
-            // EXCEPTION
-            tests.l(l, ke.exception());
-            tests.l();
+                // EXCEPTION
+                tests.l(l, ke.exception());
+                tests.l();
 
-            for (Exception exception : function.getExceptions())
-            {
-                // WHEN exception THEN
-                tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, exception.name(), ke.then());
-                tests.l(l + 2, "dbms_output.put_line('%s');", exception.name());
+                for (Exception exception : function.getExceptions())
+                {
+                    // WHEN exception THEN
+                    tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, exception.name(), ke.then());
+                    tests.l(l + 2, "dbms_output.put_line('%s');", exception.name());
+                    tests.l(dump(pkg + "." + getContext().getSoapFaultException().varName(), getContext()
+                            .getSoapFaultException().getType(), l + 2, 0));
+                    tests.l(dump(pkg + "." + exception.varName(), exception.getType(), l + 2, 0));
+                }
+
+                // WHEN soap fault THEN
+                tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, getContext().getSoapFaultException().name(), ke.then());
                 tests.l(dump(pkg + "." + getContext().getSoapFaultException().varName(), getContext()
                         .getSoapFaultException().getType(), l + 2, 0));
-                tests.l(dump(pkg + "." + exception.varName(), exception.getType(), l + 2, 0));
+
+                // WHEN OTHERS THEN
+                tests.l(l + 1, "%s %s %s\n", ke.when(), ke.others(), ke.then());
+                tests.l(l + 2, "dbms_output.put_line('OTHERS: ' || sqlcode || ' - ' || sqlerrm);");
+                // END
+                tests.l(l, "%s;", ke.end());
+                tests.l();
             }
-
-            // WHEN soap fault THEN
-            tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, getContext().getSoapFaultException().name(), ke.then());
-            tests.l(l + 2, "dbms_output.put_line('%s');", getContext().getSoapFaultException().name());
-            tests.l(dump(pkg + "." + getContext().getSoapFaultException().varName(), getContext()
-                    .getSoapFaultException().getType(), l + 2, 0));
-
-            // WHEN OTHERS THEN
-            tests.l(l + 1, "%s %s %s\n", ke.when(), ke.others(), ke.then());
-            tests.l(l + 2, "dbms_output.put_line('OTHERS: ' || sqlcode || ' - ' || sqlerrm);");
-            // END
-            tests.l(l, "%s;", ke.end());
-            tests.l();
         }
 
         // END
@@ -181,7 +201,7 @@ public class TestsWriter extends BaseWriter
 
         if (type instanceof ComplexTypeDef)
         {
-            RecordType recordType = (RecordType) getContext().getComplexTypeMap().get(type.getId());
+            RecordType recordType = (RecordType) getContext().getCustomType(type.getId());
 
             for (Field field : recordType.getMembers())
             {
@@ -192,7 +212,7 @@ public class TestsWriter extends BaseWriter
         }
         else if (type instanceof ArrayTypeDef)
         {
-            VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
+            VarrayType varrayType = (VarrayType) getContext().getCustomType(type.getId());
 
             String loopVarName = "i" + depth;
 
@@ -243,7 +263,7 @@ public class TestsWriter extends BaseWriter
 
         if (type instanceof ComplexTypeDef)
         {
-            RecordType recordType = (RecordType) getContext().getComplexTypeMap().get(type.getId());
+            RecordType recordType = (RecordType) getContext().getCustomType(type.getId());
 
             block.l(indent, "dbms_output.put_line('%s%s:');", indent(depth), varName);
             for (Field field : recordType.getMembers())
@@ -255,11 +275,12 @@ public class TestsWriter extends BaseWriter
         }
         else if (type instanceof ArrayTypeDef)
         {
-            VarrayType varrayType = (VarrayType) getContext().getComplexTypeMap().get(type.getId());
+            VarrayType varrayType = (VarrayType) getContext().getCustomType(type.getId());
 
             String loopVarName = "i" + indent;
 
-            block.l(indent, "dbms_output.put_line('%s%s [varray]:');", indent(depth), varName);
+            block.l(indent, "dbms_output.put_line('%s%s <<varray[' || %s.%s || ']>>:');", indent(depth), varName, var,
+                    ke.count());
             // FOR i IN 1..varray.COUNT LOOP
             block.l(indent, "%s %s %s 1..%s.%s %s", ke.forKey(), loopVarName, ke.in(), var, ke.count(), ke.loop());
             block.l();
@@ -300,7 +321,9 @@ public class TestsWriter extends BaseWriter
 
         String[] longStringTypes = { "base64Binary" };
 
-        String[] dateTypes = { "date", "dateTime", "time" };
+        String[] dateTypes = { "date" };
+        String[] timeTypes = { "time" };
+        String[] dateTimeTypes = { "dateTime" };
 
         String[] numberTypes = { "decimal", "double", "float" };
 
@@ -318,7 +341,15 @@ public class TestsWriter extends BaseWriter
         }
         else if (Arrays.asList(dateTypes).contains(xsdType))
         {
-            result = "'2013-01-01'";
+            result = "TO_DATE('2013-01-01', 'YYYY-MM-DD')";
+        }
+        else if (Arrays.asList(timeTypes).contains(xsdType))
+        {
+            result = "TO_DATE('2013-01-01', 'HH24:MI:SS')";
+        }
+        else if (Arrays.asList(dateTimeTypes).contains(xsdType))
+        {
+            result = "TO_DATE(REPLACE('2013-01-01','T',' '), 'YYYY-MM-DD HH24:MI:SS')";
         }
         else if (Arrays.asList(numberTypes).contains(xsdType))
         {

@@ -10,14 +10,18 @@ public interface ISymbolNameEmitter
     String varray(String namespacePrefix, String name);
 
     String field(String namespacePrefix, String name, ITypeDef type, String recordName);
-    
+
     String exception(String namespacePrefix, String name, ITypeDef type);
 
     String function(String namespacePrefix, String name);
 
-    String param(String namespacePrefix, String name, Parameter.Direction direction, boolean header, ITypeDef type, String functionName);
+    String procedure(String namespacePrefix, String name);
+
+    String param(String namespacePrefix, String name, Parameter.Direction direction, boolean header, ITypeDef type,
+            String functionName);
 
     String localVar(String namespacePrefix, String name, ITypeDef type, String functionName);
 
     String exceptionVar(String prefix, String name, ITypeDef type);
+
 }

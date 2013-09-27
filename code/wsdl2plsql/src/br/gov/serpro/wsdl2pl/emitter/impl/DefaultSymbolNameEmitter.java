@@ -33,6 +33,12 @@ public class DefaultSymbolNameEmitter implements ISymbolNameEmitter
     }
 
     @Override
+    public String procedure(String namespacePrefix, String name)
+    {
+        return U.toUnderscored("pr_" + name).toLowerCase();
+    }
+
+    @Override
     public String param(String namespacePrefix, String name, Parameter.Direction direction, boolean header,
             ITypeDef type, String functionName)
     {

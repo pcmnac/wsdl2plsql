@@ -271,4 +271,10 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
         return "EXTEND";
     }
 
+    @Override
+    public String procedure()
+    {
+        return "PROCEDURE";
+    }
+
 }

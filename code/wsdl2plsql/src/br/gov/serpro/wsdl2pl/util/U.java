@@ -38,6 +38,11 @@ public class U
         }
     }
 
+    public static void clear()
+    {
+        nameScopes.clear();
+    }
+
     private static Map<String, NameScope> nameScopes = new HashMap<String, NameScope>();
 
     public static boolean isNativeSchemaType(QName type)
@@ -84,8 +89,8 @@ public class U
     {
         String plType = null;
 
-        String[] stringTypes = { "string", "ENTITIES", "ENTITY", "ID", "IDREF", "IDREFS", "language", "Name", "NCName", "NMTOKEN", "NMTOKENS",
-                "normalizedString", "QName", "token" };
+        String[] stringTypes = { "string", "ENTITIES", "ENTITY", "ID", "IDREF", "IDREFS", "language", "Name", "NCName",
+                "NMTOKEN", "NMTOKENS", "normalizedString", "QName", "token" };
 
         String[] longStringTypes = { "base64Binary" };
 
@@ -93,8 +98,9 @@ public class U
 
         String[] numberTypes = { "decimal", "double", "float" };
 
-        String[] integerTypes = { "byte", "int", "integer", "long", "negativeInteger", "nonNegativeInteger", "nonPositiveInteger", "positiveInteger",
-                "short", "unsignedLong", "unsignedInt", "unsignedShort", "unsignedByte" };
+        String[] integerTypes = { "byte", "int", "integer", "long", "negativeInteger", "nonNegativeInteger",
+                "nonPositiveInteger", "positiveInteger", "short", "unsignedLong", "unsignedInt", "unsignedShort",
+                "unsignedByte" };
 
         String xsdType = name.getLocalPart();
 
@@ -285,9 +291,10 @@ public class U
 
     public static void main(String[] args)
     {
-        String[] names = { "get_abc_pro$00_t", "getAbcPropertyCC", "getXyzPropertyCC", "getPropertyLong1", "getPropertyLong2", "getPropertyLong3",
-                "getPropertyLong4", "getPropertyLong5", "getPropertyLong6", "getPropertyLong7", "getPropertyLong8", "getPropertyLong9",
-                "getPropertyLong10", "getPropertyLong11", "generateHashCode", "get_abc_pro$01_t" };
+        String[] names = { "get_abc_pro$00_t", "getAbcPropertyCC", "getXyzPropertyCC", "getPropertyLong1",
+                "getPropertyLong2", "getPropertyLong3", "getPropertyLong4", "getPropertyLong5", "getPropertyLong6",
+                "getPropertyLong7", "getPropertyLong8", "getPropertyLong9", "getPropertyLong10", "getPropertyLong11",
+                "generateHashCode", "get_abc_pro$01_t" };
 
         for (String property : names)
         {

@@ -3,7 +3,6 @@
       wp_url IN VARCHAR2,
       wp_data IN CLOB,
       wp_soap_action VARCHAR2 DEFAULT NULL
-    --, wp_timeout IN BINARY_INTEGER DEFAULT 180 
   ) 
       RETURN CLOB
   IS
@@ -19,13 +18,12 @@
       wl_index := 1;
       wl_length := NVL(length(wp_data), 0);
       
-      -- dbms_output.put_line('CONNECTING TO: ' || wp_url);
+      dbms_output.put_line('CONNECTING TO: ' || wp_url);
       dbms_output.put_line('REQUEST: ' || wp_data);
   
       -- configure HTTP
       utl_http.set_response_error_check(enable => FALSE);
       utl_http.set_detailed_excp_support(enable => FALSE);
-     -- utl_http.set_transfer_timeout(wp_timeout); -- o valor defaut das sessões é 60. Se eu settar isto aqui, de fora eu nunca conseguirei aumentar
   
       -- send request
       wl_request := utl_http.begin_request(wp_url, 'POST','HTTP/1.0');
@@ -41,17 +39,9 @@
           wl_index := wl_index + 4000;
       END LOOP;
   
-      -- check HTTP status code for error
-      IF wl_response.status_code <> utl_http.http_ok THEN   
-          RAISE_APPLICATION_ERROR(
-              -20003,
-              wl_response.status_code || ' - ' || wl_response.reason_phrase
-          );
-      END IF;
-
       -- get response
-      dbms_lob.createtemporary(wl_buffer, FALSE);
       wl_response := utl_http.get_response(wl_request);
+      dbms_lob.createtemporary(wl_buffer, FALSE);
       BEGIN
           LOOP
               utl_http.read_text(wl_response, wl_chunk, 4000);

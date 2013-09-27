@@ -14,6 +14,7 @@ import br.gov.serpro.wsdl2pl.exception.ParsingException;
 import br.gov.serpro.wsdl2pl.type.Exception;
 import br.gov.serpro.wsdl2pl.type.Function;
 import br.gov.serpro.wsdl2pl.type.Type;
+import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.util.U;
 
@@ -42,6 +43,12 @@ public class Context
     private Map<QName, SimpleType> simpleTypeMap = new HashMap<QName, SimpleType>();
 
     private Map<String, Exception> exceptions = new HashMap<String, Exception>();
+
+    private List<String> usedCustomTypes = new ArrayList<String>();
+
+    private List<String> functionsToGenerate = new ArrayList<String>();
+
+    private List<String> usedExceptions = new ArrayList<String>();
 
     private IKeywordEmitter keywordEmitter;
 
@@ -86,7 +93,7 @@ public class Context
         return plFunctions;
     }
 
-    public Map<String, Type> getComplexTypeMap()
+    private Map<String, Type> getComplexTypeMap()
     {
         return complexTypeMap;
     }
@@ -146,6 +153,16 @@ public class Context
         return getComplexTypeMap().containsKey(typeId);
     }
 
+    public Type getCustomType(String typeId)
+    {
+        return getComplexTypeMap().get(typeId);
+    }
+
+    public Collection<Type> getCustomTypes()
+    {
+        return getComplexTypeMap().values();
+    }
+
     public void registerCustomType(Type type)
     {
         getComplexTypeMap().put(type.getId(), type);
@@ -167,6 +184,51 @@ public class Context
     public Collection<Exception> getExceptions()
     {
         return exceptions.values();
+    }
+
+    public void registerUsedType(ITypeDef type)
+    {
+        if (!usedCustomTypes.contains(type.getId()))
+        {
+            usedCustomTypes.add(type.getId());
+        }
+    }
+
+    public boolean isElegible(Type type)
+    {
+        return usedCustomTypes.contains(type.getId());
+    }
+
+    public void registerUsedException(Exception exception)
+    {
+        if (!usedExceptions.contains(exception.getId()))
+        {
+            usedExceptions.add(exception.getId());
+            registerUsedType(exception.getType());
+        }
+    }
+
+    public boolean isElegible(Exception exception)
+    {
+        return usedExceptions.contains(exception.getId());
+    }
+
+    public boolean isElegible(Function function)
+    {
+        return functionsToGenerate.contains(function.getElement().getName());
+    }
+
+    public void makeElegible(String functionName)
+    {
+        functionsToGenerate.add(functionName);
+    }
+
+    public void clear()
+    {
+        functionsToGenerate.clear();
+        usedCustomTypes.clear();
+        usedExceptions.clear();
+        U.clear();
     }
 
     public Element findElement(Element element)
@@ -235,11 +297,6 @@ public class Context
     public Exception getSoapFaultException()
     {
         return soapFaultException;
-    }
-
-    public void setSoapFaultException(Exception soapFaultException)
-    {
-        this.soapFaultException = soapFaultException;
     }
 
     public void resolveProtocol(String preferredProtocol)

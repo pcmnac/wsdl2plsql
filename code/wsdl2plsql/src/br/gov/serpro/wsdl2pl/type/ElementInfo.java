@@ -27,8 +27,30 @@ public class ElementInfo
 
     public ElementInfo(Element element)
     {
-        this(element.getName(), (element.getSchema() != null && element.getSchema().getElementFormDefault()
-                .equals("qualified")) ? element.getSchema().getTargetNamespace() : null);
+        // this(element.getName(), (element.getSchema() != null && element.getSchema().getElementFormDefault()
+        // .equals("qualified")) ? element.getSchema().getTargetNamespace() : null);
+
+        this(element.getName());
+
+        if (element.getSchema() != null)
+        {
+            if (element.getSchema().getElement(element.getQname()) != null)
+            {
+                setNamespace(element.getSchema().getTargetNamespace());
+            }
+            else
+            {
+                if (element.getSchema().getElementFormDefault().equals("qualified"))
+                {
+                    setNamespace(element.getSchema().getTargetNamespace());
+                }
+            }
+        }
+
+        // setNamespace((element.getSchema() != null && element.getSchema().getElementFormDefault().equals("qualified"))
+        // ? element
+        // .getSchema().getTargetNamespace() : null);
+
         setOptional(Integer.parseInt(element.getMinOccurs()) == 0);
     }
 

@@ -29,25 +29,34 @@ public class SpecWriter extends BaseWriter
         // TODO: tratar
         spec.l(1, "-- TYPES\n");
 
-        for (Type plType : getContext().getComplexTypeMap().values())
+        for (Type plType : getContext().getCustomTypes())
         {
-            spec.l(1, "-- " + plType.comments());
-            spec.l(1, plType.forwardDecl() + "\n");
+            if (getContext().isElegible(plType))
+            {
+                spec.l(1, "-- " + plType.comments());
+                spec.l(1, plType.forwardDecl() + "\n");
+            }
         }
 
-        for (Type plType : getContext().getComplexTypeMap().values())
+        for (Type plType : getContext().getCustomTypes())
         {
-            spec.l(1, "-- " + plType.comments());
-            spec.l(plType.decl(1));
+            if (getContext().isElegible(plType))
+            {
+                spec.l(1, "-- " + plType.comments());
+                spec.l(plType.decl(1));
+            }
         }
 
         spec.l(1, "-- EXCEPTIONS\n");
 
         for (Exception exception : getContext().getExceptions())
         {
-            spec.l(1, "-- %s", exception.comments());
-            spec.l(1, "%s;", exception.decl());
-            spec.l(1, "%s;\n", exception.var());
+            if (getContext().isElegible(exception))
+            {
+                spec.l(1, "-- %s", exception.comments());
+                spec.l(1, "%s;", exception.decl());
+                spec.l(1, "%s;\n", exception.var());
+            }
         }
 
         // TODO: tratar
@@ -57,41 +66,49 @@ public class SpecWriter extends BaseWriter
         {
             for (Function function : getContext().getPlFunctions())
             {
-                spec.l(BODY_INDENT, "/**");
-                spec.l(BODY_INDENT, " * " + function.comments());
-                spec.l(BODY_INDENT, " * ");
-                spec.l(BODY_INDENT, " * @author wsdl2plsql (generated)");
-                spec.l(BODY_INDENT, " * ");
-
-                for (Parameter parameter : function.getParameters())
+                if (getContext().isElegible(function))
                 {
-                    spec.l(BODY_INDENT, " * @param %s %s", parameter.name(), parameter.getElement());
-                }
-                if (function.getInputHeader() != null)
-                {
-                    spec.l(BODY_INDENT, " * @param %s %s", function.getInputHeader().name(), function.getInputHeader()
-                            .getElement());
-                }
-                if (function.getOutputHeader() != null)
-                {
-                    spec.l(BODY_INDENT, " * @param %s %s", function.getOutputHeader().name(), function
-                            .getOutputHeader().getElement());
-                }
-                spec.l(BODY_INDENT, " * @param %s %s", function.getUrlParam().name(), "Service URL");
+                    spec.l(BODY_INDENT, "/**");
+                    spec.l(BODY_INDENT, " * " + function.comments());
+                    spec.l(BODY_INDENT, " * ");
+                    spec.l(BODY_INDENT, " * @author wsdl2plsql (generated)");
+                    spec.l(BODY_INDENT, " * ");
 
-                spec.l(BODY_INDENT, " * ");
-                spec.l(BODY_INDENT, " * @return %s", function.getReturnElement());
-                spec.l(BODY_INDENT, " * ");
+                    for (Parameter parameter : function.getParameters())
+                    {
+                        spec.l(BODY_INDENT, " * @param %s %s", parameter.name(), parameter.getElement());
+                    }
+                    if (function.getInputHeader() != null)
+                    {
+                        spec.l(BODY_INDENT, " * @param %s %s", function.getInputHeader().name(), function
+                                .getInputHeader().getElement());
+                    }
+                    if (function.getOutputHeader() != null)
+                    {
+                        spec.l(BODY_INDENT, " * @param %s %s", function.getOutputHeader().name(), function
+                                .getOutputHeader().getElement());
+                    }
+                    spec.l(BODY_INDENT, " * @param %s %s", function.getUrlParam().name(), "Service URL");
 
-                for (Exception exception : function.getExceptions())
-                {
-                    spec.l(BODY_INDENT, " * @throws " + exception.name());
+                    if (!function.isVoid())
+                    {
+                        spec.l(BODY_INDENT, " * ");
+                        spec.l(BODY_INDENT, " * @return %s", function.getReturnElement());
+                    }
+
+                    spec.l(BODY_INDENT, " * ");
+
+                    spec.l(BODY_INDENT, " * @throws " + getContext().getSoapFaultException().name());
+
+                    for (Exception exception : function.getExceptions())
+                    {
+                        spec.l(BODY_INDENT, " * @throws " + exception.name());
+                    }
+
+                    spec.l(BODY_INDENT, " * ");
+                    spec.l(BODY_INDENT, " */ ");
+                    spec.l(function.decl(BODY_INDENT, true) + ";\n");
                 }
-
-                spec.l(BODY_INDENT, " * @throws " + getContext().getSoapFaultException().name());
-                spec.l(BODY_INDENT, " * ");
-                spec.l(BODY_INDENT, " */ ");
-                spec.l(function.decl(BODY_INDENT) + ";\n");
             }
         }
 

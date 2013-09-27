@@ -130,15 +130,29 @@ public abstract class OperationParser
             function.setOutputHeader(outHeaderParameter);
         }
 
-        if (outputSoapBody.getParts().size() == 1)
+        if (outputSoapBody != null)
         {
-            Part part = outputSoapBody.getParts().get(0);
-            function.setReturnType(extractReturnType(part));
-            function.setReturnElement(getResultElement(part));
+            if (outputSoapBody.getParts() == null || outputSoapBody.getParts().isEmpty())
+            {
+                System.out.println("Function output have no parts:" + function.getElement().getName());
+            }
+            else if (outputSoapBody.getParts().size() == 1)
+            {
+                Part part = outputSoapBody.getParts().get(0);
+                function.setReturnType(extractReturnType(part));
+                if (function.getReturnType() != null)
+                {
+                    function.setReturnElement(getResultElement(part));
+                }
+            }
+            else
+            {
+                throw new RuntimeException("Output Body message must have at most one part!");
+            }
         }
         else
         {
-            throw new RuntimeException("Output Body message must have one part!");
+            System.out.println("Function without output:" + function.getElement().getName());
         }
 
         // FAULTS
@@ -222,14 +236,15 @@ public abstract class OperationParser
             Element resultElement = context.findElement(part.getElement());
             ComplexType complexType = getComplexType(resultElement);
 
-            if (complexType.getSequence().getElements().size() != 1)
+            if (complexType.getSequence().getElements().size() > 1)
             {
-                throw new ParsingException("Unknown format: Return complex type should be only one child:"
-                        + complexType);
+                throw new ParsingException("Return complex type should be at most one child:" + complexType);
             }
 
-            returnType = getTypeDef(complexType.getSequence().getElements().get(0).getType());
-
+            if (!complexType.getSequence().getElements().isEmpty())
+            {
+                returnType = getTypeDef(complexType.getSequence().getElements().get(0).getType());
+            }
         }
 
         return returnType;

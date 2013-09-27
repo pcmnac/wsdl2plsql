@@ -49,7 +49,7 @@ public class RecordType extends Type
 
         for (Field field : getMembers())
         {
-            if (field.getElement().equals(elementInfo))
+            if (field.getElement().getName().equals(elementInfo.getName()))
             {
                 result = field;
                 break;

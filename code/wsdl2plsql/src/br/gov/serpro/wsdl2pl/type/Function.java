@@ -109,17 +109,24 @@ public class Function extends DerivedSymbol implements Identifiable<String>
                 getElement().getNamespace())).toString();
     }
 
-    public String decl(int indent)
+    public boolean isVoid()
+    {
+        return getReturnType() == null;
+    }
+
+    public String decl(int indent, boolean header)
     {
 
         SB signature = new SB();
         IKeywordEmitter ke = getContext().getKeywordEmitter();
 
         // FUNCTION functionName
-        signature.a(indent, "%s %s", ke.function(), name());
+        signature.a(indent, "%s %s", (!isVoid() ? ke.function() : ke.procedure()), name());
+
+        signature.l(" (");
+
         if (!getParameters().isEmpty())
         {
-            signature.l(" (");
             for (int i = 0; i < getParameters().size(); i++)
             {
                 Parameter param = getParameters().get(i);
@@ -128,27 +135,38 @@ public class Function extends DerivedSymbol implements Identifiable<String>
 
                 signature.l(",");
             }
+        }
+        if (getInputHeader() != null)
+        {
+            signature.l(indent + 1, "-- " + getInputHeader().comments());
+            signature.l(indent + 1, getInputHeader().decl() + ",");
+        }
 
-            if (getInputHeader() != null)
-            {
-                signature.l(indent + 1, "-- " + getInputHeader().comments());
-                signature.l(indent + 1, getInputHeader().decl() + ",");
-            }
+        if (getOutputHeader() != null)
+        {
+            signature.l(indent + 1, "-- " + getOutputHeader().comments());
+            signature.l(indent + 1, getOutputHeader().decl() + ",");
+        }
 
-            if (getOutputHeader() != null)
-            {
-                signature.l(indent + 1, "-- " + getOutputHeader().comments());
-                signature.l(indent + 1, getOutputHeader().decl() + ",");
-            }
-
-            signature.l(indent + 1, "-- url");
+        signature.l(indent + 1, "-- url");
+        if (header)
+        {
             signature
                     .l(indent + 1, "%s %s %s", getUrlParam().decl(), ke.defaultKey(), "'" + getDefaultLocation() + "'");
-
-            signature.l(indent, ")");
         }
-        signature.a(indent,
-                String.format("%s %s", ke.returnKey(), getReturnType().emit().replaceAll("\\([\\W\\w]+\\)", "")));
+        else
+        {
+            signature.l(indent + 1, getUrlParam().decl());
+        }
+
+        signature.a(indent, ")");
+
+        if (!isVoid())
+        {
+            signature.l();
+            signature.a(indent,
+                    String.format("%s %s", ke.returnKey(), getReturnType().emit().replaceAll("\\([\\W\\w]+\\)", "")));
+        }
 
         return signature.toString();
     }
@@ -183,8 +201,20 @@ public class Function extends DerivedSymbol implements Identifiable<String>
 
     public String name()
     {
-        return U.toPlIdentifier(getContext().getSymbolNameEmitter().function(
-                getContext().getPrefix(getElement().getNamespace()), getElement().getName()));
+        String name = null;
+
+        if (isVoid())
+        {
+            name = U.toPlIdentifier(getContext().getSymbolNameEmitter().procedure(
+                    getContext().getPrefix(getElement().getNamespace()), getElement().getName()));
+        }
+        else
+        {
+            name = U.toPlIdentifier(getContext().getSymbolNameEmitter().function(
+                    getContext().getPrefix(getElement().getNamespace()), getElement().getName()));
+        }
+
+        return name;
     }
 
     @Override

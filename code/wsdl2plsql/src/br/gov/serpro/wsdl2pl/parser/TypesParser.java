@@ -1,6 +1,10 @@
 package br.gov.serpro.wsdl2pl.parser;
 
 import groovy.xml.QName;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.exception.ParsingException;
 import br.gov.serpro.wsdl2pl.type.ElementInfo;
@@ -16,13 +20,17 @@ import br.gov.serpro.wsdl2pl.type.def.XsdTypeDef;
 import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.util.U;
 
+import com.predic8.schema.ComplexContent;
 import com.predic8.schema.ComplexType;
+import com.predic8.schema.Derivation;
 import com.predic8.schema.Element;
+import com.predic8.schema.Extension;
 import com.predic8.schema.ModelGroup;
 import com.predic8.schema.Schema;
 import com.predic8.schema.SchemaComponent;
 import com.predic8.schema.Sequence;
 import com.predic8.schema.SimpleType;
+import com.predic8.schema.TypeDefinition;
 import com.predic8.wsdl.Types;
 
 public class TypesParser
@@ -46,7 +54,7 @@ public class TypesParser
                     dissectSimpleType(simpleType);
                 }
 
-                addSoapFaultType();
+                addDefaultExceptions();
 
                 for (ComplexType complexType : schema.getComplexTypes())
                 {
@@ -56,25 +64,25 @@ public class TypesParser
         }
     }
 
-    public void addSoapFaultType()
+    public void addDefaultExceptions()
     {
-        ComplexType complexType = null;
+        ComplexType soapFaultComplexType = null;
 
         if (context.getProtocol().equals(K.Protocol.SOAP_1_1))
         {
-            complexType = buildSoap11FaultComplexType();
+            soapFaultComplexType = buildSoap11FaultComplexType();
         }
         else if (context.getProtocol().equals(K.Protocol.SOAP_1_2))
         {
-            complexType = buildSoap12FaultComplexType();
+            soapFaultComplexType = buildSoap12FaultComplexType();
         }
 
-        dissectComplexType(complexType);
+        dissectComplexType(soapFaultComplexType);
 
-        Exception exception = new Exception(context, new ElementInfo("SoapFault"));
-        exception.setType(new ComplexTypeDef(context, complexType.getQname()));
+        Exception soapFaultException = new Exception(context, new ElementInfo("SoapFault"));
+        soapFaultException.setType(new ComplexTypeDef(context, soapFaultComplexType.getQname()));
 
-        context.registerSoapFaultException(exception);
+        context.registerSoapFaultException(soapFaultException);
     }
 
     private ComplexType buildSoap11FaultComplexType()
@@ -198,69 +206,119 @@ public class TypesParser
         return fault;
     }
 
+    private List<Element> getAllElements(ComplexType complexType)
+    {
+        List<Element> elements = new ArrayList<Element>();
+
+        SchemaComponent schemaComponent = complexType.getModel();
+
+        if (schemaComponent instanceof ComplexContent)
+        {
+            ComplexContent complexContent = (ComplexContent) schemaComponent;
+
+            Derivation derivation = complexContent.getDerivation();
+
+            if (derivation instanceof Extension)
+            {
+                Extension extension = (Extension) derivation;
+                QName baseQName = extension.getBase();
+
+                ComplexType baseComplexType = null;
+                for (Types types : context.getDefs().getTypes())
+                {
+                    for (Schema schema : types.getAllSchemas())
+                    {
+                        TypeDefinition typeDefinition = schema.getType(baseQName);
+                        if (typeDefinition != null && typeDefinition instanceof ComplexType)
+                        {
+                            baseComplexType = (ComplexType) typeDefinition;
+                            break;
+                        }
+
+                    }
+                    if (baseComplexType != null)
+                    {
+                        elements.addAll(getAllElements(baseComplexType));
+                        break;
+                    }
+                }
+
+                SchemaComponent extensionModel = extension.getModel();
+                if (extensionModel instanceof ModelGroup)
+                {
+                    elements.addAll(((ModelGroup) extensionModel).getElements());
+                }
+            }
+        }
+        // Choice, All ou Sequence
+        else if (schemaComponent instanceof ModelGroup)
+        {
+            ModelGroup modelGroup = (ModelGroup) schemaComponent;
+
+            elements.addAll(modelGroup.getElements());
+        }
+
+        return elements;
+    }
+
     private void dissectComplexType(ComplexType complexType)
     {
         // System.out.println("Complex Type: " + complexType.getName());
         RecordType recordType = new RecordType(context, complexType);
-        SchemaComponent schemaComponent = complexType.getModel();
 
-        // Choice, All ou Sequence
-        if (schemaComponent instanceof ModelGroup)
+        List<Element> elements = getAllElements(complexType);
+
+        for (Element element : elements)
         {
-            ModelGroup modelGroup = (ModelGroup) schemaComponent;
+            boolean isArray = element.getMaxOccurs().equals("unbounded")
+                    || Integer.parseInt(element.getMaxOccurs()) > 1;
 
-            for (Element element : modelGroup.getElements())
+            element = context.findElement(element);
+
+            Field field = new Field(context, recordType, new ElementInfo(element));
+
+            ITypeDef fieldType = null;
+
+            if (element.getType() != null)
             {
-                boolean isArray = element.getMaxOccurs().equals("unbounded")
-                        || Integer.parseInt(element.getMaxOccurs()) > 1;
-
-                element = context.findElement(element);
-
-                Field field = new Field(context, recordType, new ElementInfo(element));
-
-                ITypeDef fieldType = null;
-
-                if (element.getType() != null)
+                if (U.isNativeSchemaType(element.getType()))
                 {
-                    if (U.isNativeSchemaType(element.getType()))
-                    {
-                        fieldType = new XsdTypeDef(context, element.getType());
-                    }
-                    else if (context.containsSimpleType(element.getType()))
-                    {
-                        fieldType = new SimpleTypeDef(context, context.getSimpleType(element.getType()));
-                    }
-                    else
-                    {
-                        fieldType = new ComplexTypeDef(context, element.getType());
-                    }
+                    fieldType = new XsdTypeDef(context, element.getType());
+                }
+                else if (context.containsSimpleType(element.getType()))
+                {
+                    fieldType = new SimpleTypeDef(context, context.getSimpleType(element.getType()));
                 }
                 else
                 {
-                    throw new ParsingException(String.format(
-                            "Element <%s> must define its type. Complex type sub-elements must define their type.",
-                            element.getName()));
+                    fieldType = new ComplexTypeDef(context, element.getType());
                 }
-
-                if (isArray)
-                {
-                    VarrayType arrayType = new VarrayType(context, fieldType);
-
-                    fieldType = new ArrayTypeDef(context, arrayType.getType());
-
-                    if (!context.containsCustomType(arrayType.getId()))
-                    {
-                        // context.getPlTypes().add(arrayType);
-                        context.registerCustomType(arrayType);
-                    }
-                }
-
-                fieldType.setRequired(Integer.parseInt(element.getMinOccurs()) > 0);
-
-                field.setType(fieldType);
-
-                recordType.getMembers().add(field);
             }
+            else
+            {
+                throw new ParsingException(String.format(
+                        "Element <%s> must define its type. Complex type sub-elements must define their type.",
+                        element.getName()));
+            }
+
+            if (isArray)
+            {
+                VarrayType arrayType = new VarrayType(context, fieldType);
+
+                fieldType = new ArrayTypeDef(context, arrayType.getType());
+
+                if (!context.containsCustomType(arrayType.getId()))
+                {
+                    // context.getPlTypes().add(arrayType);
+                    context.registerCustomType(arrayType);
+                }
+            }
+
+            fieldType.setRequired(Integer.parseInt(element.getMinOccurs()) > 0);
+
+            field.setType(fieldType);
+
+            recordType.getMembers().add(field);
         }
 
         // context.getPlTypes().add(recordType);
