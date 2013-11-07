@@ -16,6 +16,8 @@ import br.gov.serpro.wsdl2pl.type.VarrayType;
 import br.gov.serpro.wsdl2pl.type.def.ArrayTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ComplexTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
+import br.gov.serpro.wsdl2pl.type.def.SimpleTypeDef;
+import br.gov.serpro.wsdl2pl.type.validation.InputValidator;
 import br.gov.serpro.wsdl2pl.util.SB;
 import br.gov.serpro.wsdl2pl.util.U;
 
@@ -32,6 +34,8 @@ public class TestsWriter extends BaseWriter
         IKeywordEmitter ke = getContext().getKeywordEmitter();
         int l = 1;
         String pkg = getContext().getPackageName();
+
+        tests.l(0, "SET SERVEROUTPUT ON;\n");
 
         // BEGIN
         tests.l(0, ke.begin());
@@ -74,6 +78,7 @@ public class TestsWriter extends BaseWriter
 
                 tests.l(l, "-- test skeleton for: %s", function.name());
                 // DECLARE
+
                 tests.l(l, ke.declare());
                 tests.l();
                 // vars
@@ -86,7 +91,8 @@ public class TestsWriter extends BaseWriter
                     tests.l(l + 1, param.decl());
                 }
                 tests.l();
-
+                tests.l(l + 1, "t NUMBER;");
+                String showTime = "dbms_output.put_line('network time: ' || round((dbms_utility.get_time() - t) * 10) || 'ms');";
                 // BEGIN
                 tests.l(l, ke.begin());
 
@@ -127,6 +133,7 @@ public class TestsWriter extends BaseWriter
                 tests.l(l + 1, "dbms_output.put_line('---------------------------');");
                 tests.l(l + 1, "dbms_output.put_line('Invoking %s()');", function.name());
 
+                tests.l(l + 1, "t := dbms_utility.get_time();");
                 if (function.isVoid())
                 {
                     // procedure
@@ -148,6 +155,8 @@ public class TestsWriter extends BaseWriter
                 }
                 tests.l(");\n");
 
+                tests.l(l + 1, showTime);
+
                 if (!function.isVoid())
                 {
                     tests.l(dump(varResult.name(), function.getReturnType(), l + 1, 0));
@@ -167,6 +176,7 @@ public class TestsWriter extends BaseWriter
                 {
                     // WHEN exception THEN
                     tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, exception.name(), ke.then());
+                    tests.l(l + 2, showTime);
                     tests.l(l + 2, "dbms_output.put_line('%s');", exception.name());
                     tests.l(dump(pkg + "." + getContext().getSoapFaultException().varName(), getContext()
                             .getSoapFaultException().getType(), l + 2, 0));
@@ -175,11 +185,19 @@ public class TestsWriter extends BaseWriter
 
                 // WHEN soap fault THEN
                 tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, getContext().getSoapFaultException().name(), ke.then());
+                tests.l(l + 2, showTime);
                 tests.l(dump(pkg + "." + getContext().getSoapFaultException().varName(), getContext()
                         .getSoapFaultException().getType(), l + 2, 0));
 
+                // WHEN inputValidation THEN
+                tests.l(l + 1, "%s %s.%s %s\n", ke.when(), pkg, getContext().getInputValidationException().name(),
+                        ke.then());
+                tests.l(l + 2, showTime);
+                tests.l(l + 2, "dbms_output.put_line('Input Validation: ' || sqlcode || ' - ' || sqlerrm);\n");
+
                 // WHEN OTHERS THEN
                 tests.l(l + 1, "%s %s %s\n", ke.when(), ke.others(), ke.then());
+                tests.l(l + 2, showTime);
                 tests.l(l + 2, "dbms_output.put_line('OTHERS: ' || sqlcode || ' - ' || sqlerrm);");
                 // END
                 tests.l(l, "%s;", ke.end());
@@ -226,6 +244,18 @@ public class TestsWriter extends BaseWriter
             block.l(fill(var + "(" + loopVarName + ")", varrayType.getType(), depth + 1));
 
             block.l(depth, "%s %s;", ke.end(), ke.loop());
+        }
+        else if (type instanceof SimpleTypeDef)
+        {
+            InputValidator validator = ((SimpleTypeDef) type).getInputValidator();
+            if (validator != null)
+            {
+                block.l(depth, "%s := %s;", var, validator.randomValue());
+            }
+            else
+            {
+                block.l(depth, "%s := %s;", var, generateValue(type.getXsdType().getLocalPart()));
+            }
         }
         else
         {

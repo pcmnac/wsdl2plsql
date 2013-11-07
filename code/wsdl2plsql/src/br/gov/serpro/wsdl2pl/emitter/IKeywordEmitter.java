@@ -80,16 +80,24 @@ public interface IKeywordEmitter
 
     String exception();
 
-    Object raise();
+    String raise();
 
-    Object elseif();
+    String elseif();
 
     String when();
 
     String others();
 
-    Object extend();
+    String extend();
 
     String procedure();
+
+    String exceptionInit();
+
+    String pragma();
+    
+    String raiseApplicationError();
+    
+    
 
 }

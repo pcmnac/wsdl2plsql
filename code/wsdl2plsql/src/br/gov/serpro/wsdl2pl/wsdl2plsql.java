@@ -155,10 +155,10 @@ public class wsdl2plsql implements Runnable
                     testsWriter = new FileWriter(testsFileName);
 
                     FunctionBodyWriter functionBodyWriter = new FunctionBodyWriter(context);
-                    bodyWriter.write(functionBodyWriter.writeFunctionsBody());
+                    bodyWriter.write(functionBodyWriter.write());
 
                     SpecWriter specWriter = new SpecWriter(context);
-                    specFileWriter.write(specWriter.writeSpec());
+                    specFileWriter.write(specWriter.write());
 
                     TestsWriter testWriter = new TestsWriter(context);
                     testsWriter.write(testWriter.write());
@@ -326,7 +326,14 @@ public class wsdl2plsql implements Runnable
             wsdl2plsql wsdl2plsql = new wsdl2plsql(wsdl, packageName, dest, operations.toArray(ops),
                     operationsPerPackage);
 
-            wsdl2plsql.run();
+            try
+            {
+                wsdl2plsql.run();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
         catch (Exception exp)
         {

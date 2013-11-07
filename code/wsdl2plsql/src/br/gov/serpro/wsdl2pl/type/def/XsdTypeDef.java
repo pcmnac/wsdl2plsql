@@ -11,9 +11,6 @@ public class XsdTypeDef implements ITypeDef
 
     private Context context;
 
-    @SuppressWarnings("unused")
-    private boolean required;
-
     public XsdTypeDef(Context context, QName xsdType)
     {
         this.context = context;
@@ -24,12 +21,6 @@ public class XsdTypeDef implements ITypeDef
     public QName getXsdType()
     {
         return xsdType;
-    }
-
-    @Override
-    public void setRequired(boolean required)
-    {
-        this.required = required;
     }
 
     public Context getContext()

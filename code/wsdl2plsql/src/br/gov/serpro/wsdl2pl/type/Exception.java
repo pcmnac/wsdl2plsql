@@ -6,9 +6,15 @@ import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 import br.gov.serpro.wsdl2pl.util.U;
 
+/**
+ * @author 04343650413
+ * 
+ */
 public class Exception extends DerivedSymbol implements Identifiable<String>
 {
     private ITypeDef type;
+
+    private Integer number;
 
     public Exception(Context context, ElementInfo element)
     {
@@ -23,6 +29,16 @@ public class Exception extends DerivedSymbol implements Identifiable<String>
     public void setType(ITypeDef type)
     {
         this.type = type;
+    }
+
+    public Integer getNumber()
+    {
+        return number;
+    }
+
+    public void setNumber(Integer number)
+    {
+        this.number = number;
     }
 
     public String decl()

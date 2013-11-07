@@ -2,7 +2,7 @@ package br.gov.serpro.wsdl2pl.writer;
 
 import br.gov.serpro.wsdl2pl.Context;
 
-public class BaseWriter
+public abstract class BaseWriter implements IWriter
 {
 
     protected static final int BODY_INDENT = 1;

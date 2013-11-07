@@ -242,13 +242,13 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
     }
 
     @Override
-    public Object raise()
+    public String raise()
     {
         return "RAISE";
     }
 
     @Override
-    public Object elseif()
+    public String elseif()
     {
         return "ELSIF";
     }
@@ -266,7 +266,7 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
     }
 
     @Override
-    public Object extend()
+    public String extend()
     {
         return "EXTEND";
     }
@@ -275,6 +275,24 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
     public String procedure()
     {
         return "PROCEDURE";
+    }
+
+    @Override
+    public String exceptionInit()
+    {
+        return "EXCEPTION_INIT";
+    }
+
+    @Override
+    public String pragma()
+    {
+        return "PRAGMA";
+    }
+
+    @Override
+    public String raiseApplicationError()
+    {
+        return "RAISE_APPLICATION_ERROR";
     }
 
 }

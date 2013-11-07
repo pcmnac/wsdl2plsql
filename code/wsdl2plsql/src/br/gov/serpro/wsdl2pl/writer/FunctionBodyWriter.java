@@ -17,6 +17,7 @@ import br.gov.serpro.wsdl2pl.type.VarrayType;
 import br.gov.serpro.wsdl2pl.type.def.ArrayTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ComplexTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
+import br.gov.serpro.wsdl2pl.type.def.SimpleTypeDef;
 import br.gov.serpro.wsdl2pl.util.K;
 import br.gov.serpro.wsdl2pl.util.SB;
 import br.gov.serpro.wsdl2pl.util.U;
@@ -28,7 +29,7 @@ public class FunctionBodyWriter extends BaseWriter
         super(context);
     }
 
-    public String writeFunctionsBody() throws IOException
+    public String write() throws IOException
     {
         SB functions = new SB();
         IKeywordEmitter ke = getContext().getKeywordEmitter();
@@ -46,6 +47,8 @@ public class FunctionBodyWriter extends BaseWriter
         {
 
             getContext().registerUsedException(getContext().getSoapFaultException());
+
+            getContext().registerUsedException(getContext().getInputValidationException());
 
             for (Function function : getContext().getPlFunctions())
             {
@@ -382,6 +385,47 @@ public class FunctionBodyWriter extends BaseWriter
             body.l(level, "%s := %s ||\n", request.name(), request.name());
 
         }
+        else if (type instanceof SimpleTypeDef)
+        {
+            SimpleTypeDef simpleTypeDef = (SimpleTypeDef) type;
+
+            if (element.isOptional())
+            {
+                body.l("'';\n");
+                body.l(level, "%s %s %s %s %s %s\n", ke.ifKey(), prefix + name, ke.is(), ke.not(), ke.nullKey(),
+                        ke.then());
+
+                if (simpleTypeDef.getInputValidator() != null)
+                {
+                    body.l(simpleTypeDef.getInputValidator().emit(level + 1, prefix + name));
+                }
+
+                body.a(level + 1, "%s := %s || ", request.name(), request.name());
+                body.l("'<" + toQName(element) + ">' || "
+                        + U.baseTypeToString(type.getXsdType().getLocalPart(), prefix + name) + " || '</"
+                        + toQName(element) + ">';");
+
+                body.l(level, "%s %s;", ke.end(), ke.ifKey());
+
+                body.a(level, "%s := %s || ", request.name(), request.name());
+
+            }
+            else
+            {
+                body.l("'';\n");
+
+                if (simpleTypeDef.getInputValidator() != null)
+                {
+                    body.l(simpleTypeDef.getInputValidator().emit(level, prefix + name));
+                }
+
+                body.a(level,
+                        "'<" + toQName(element) + ">' || "
+                                + U.baseTypeToString(type.getXsdType().getLocalPart(), prefix + name) + " || '</"
+                                + toQName(element) + ">' || ");
+            }
+
+        }
         else
         {
             if (element.isOptional())
@@ -395,6 +439,7 @@ public class FunctionBodyWriter extends BaseWriter
                         + U.baseTypeToString(type.getXsdType().getLocalPart(), prefix + name) + " || '</"
                         + toQName(element) + ">';");
 
+                // END IF:
                 body.l(level, "%s %s;", ke.end(), ke.ifKey());
 
                 body.a(level, "%s := %s || ", request.name(), request.name());

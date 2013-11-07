@@ -19,6 +19,11 @@ public class SB
         a(0, string);
     }
 
+    public void a(String string, Object... values)
+    {
+        builder.append(String.format(string, values));
+    }
+
     public void a(int indentLevel, String string)
     {
         indent(indentLevel);

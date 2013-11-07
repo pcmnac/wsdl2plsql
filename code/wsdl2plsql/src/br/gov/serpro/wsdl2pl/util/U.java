@@ -87,6 +87,11 @@ public class U
 
     public static String baseTypeToPlType(QName name, Context context)
     {
+        return baseTypeToPlType(name, context, null);
+    }
+
+    public static String baseTypeToPlType(QName name, Context context, String size)
+    {
         String plType = null;
 
         String[] stringTypes = { "string", "ENTITIES", "ENTITY", "ID", "IDREF", "IDREFS", "language", "Name", "NCName",
@@ -108,7 +113,8 @@ public class U
 
         if (Arrays.asList(stringTypes).contains(xsdType))
         {
-            plType = ke.varchar2() + "(32767)";
+            String s = size != null ? size : "(32767)";
+            plType = ke.varchar2() + s;
         }
         else if (Arrays.asList(longStringTypes).contains(xsdType))
         {
@@ -129,6 +135,10 @@ public class U
         else if ("boolean".equals(xsdType))
         {
             plType = ke.booleanKey();
+        }
+        else if ("anyType".equals(xsdType))
+        {
+            plType = ke.clob();
         }
         else
         {

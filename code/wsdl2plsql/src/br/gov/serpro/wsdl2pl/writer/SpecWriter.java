@@ -15,7 +15,7 @@ public class SpecWriter extends BaseWriter
         super(context);
     }
 
-    public String writeSpec()
+    public String write()
     {
         SB spec = new SB();
         IKeywordEmitter ke = getContext().getKeywordEmitter();
@@ -55,7 +55,20 @@ public class SpecWriter extends BaseWriter
             {
                 spec.l(1, "-- %s", exception.comments());
                 spec.l(1, "%s;", exception.decl());
-                spec.l(1, "%s;\n", exception.var());
+                if (exception.getType() != null)
+                {
+                    // err_name EXCEPTION;
+                    spec.l(1, "%s;\n", exception.var());
+                }
+                else if (exception.getNumber() != null)
+                {
+                    // PRAGMA EXCEPTION_INIT(err_name, -20000);
+                    spec.l(1, "%s %s(%s, %d);\n", ke.pragma(), ke.exceptionInit(), exception.name(), exception.getNumber());
+                }
+                else
+                {
+                    spec.l();
+                }
             }
         }
 

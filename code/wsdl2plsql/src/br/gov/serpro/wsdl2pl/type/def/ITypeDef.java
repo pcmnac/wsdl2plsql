@@ -8,9 +8,4 @@ public interface ITypeDef extends Identifiable<String>
     String emit();
 
     QName getXsdType();
-
-    // String getPlType();
-
-    void setRequired(boolean required);
-
 }

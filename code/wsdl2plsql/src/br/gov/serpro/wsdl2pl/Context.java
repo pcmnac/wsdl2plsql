@@ -58,9 +58,13 @@ public class Context
 
     private String protocol;
 
-    private Exception soapFaultException;
+    private String soapFaultExceptionId;
+
+    private String inputValidationExceptionId;
 
     private Map<String, String> namespacePrefixes = new HashMap<String, String>();
+
+    private int exceptionId = 20000;
 
     public String getPackageName()
     {
@@ -173,12 +177,17 @@ public class Context
         getPlFunctions().add(function);
     }
 
-    public void registerException(Exception exception)
+    public void registerException(Exception exception, String id)
     {
         if (!exceptions.containsKey(exception.getId()))
         {
-            exceptions.put(exception.getId(), exception);
+            exceptions.put(id, exception);
         }
+    }
+
+    public void registerException(Exception exception)
+    {
+        registerException(exception, exception.getId());
     }
 
     public Collection<Exception> getExceptions()
@@ -204,7 +213,11 @@ public class Context
         if (!usedExceptions.contains(exception.getId()))
         {
             usedExceptions.add(exception.getId());
-            registerUsedType(exception.getType());
+
+            if (exception.getType() != null)
+            {
+                registerUsedType(exception.getType());
+            }
         }
     }
 
@@ -291,12 +304,23 @@ public class Context
     public void registerSoapFaultException(Exception exception)
     {
         registerException(exception);
-        soapFaultException = exception;
+        soapFaultExceptionId = exception.getId();
     }
 
     public Exception getSoapFaultException()
     {
-        return soapFaultException;
+        return exceptions.get(soapFaultExceptionId);
+    }
+
+    public void registerInputValidationException(Exception exception)
+    {
+        registerException(exception);
+        inputValidationExceptionId = exception.getId();
+    }
+
+    public Exception getInputValidationException()
+    {
+        return exceptions.get(inputValidationExceptionId);
     }
 
     public void resolveProtocol(String preferredProtocol)
@@ -334,5 +358,10 @@ public class Context
         {
             throw new ParsingException("More than one service is not supported.");
         }
+    }
+
+    public int nextExceptionId()
+    {
+        return -++exceptionId;
     }
 }

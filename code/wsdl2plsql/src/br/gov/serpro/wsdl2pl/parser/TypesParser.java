@@ -83,6 +83,12 @@ public class TypesParser
         soapFaultException.setType(new ComplexTypeDef(context, soapFaultComplexType.getQname()));
 
         context.registerSoapFaultException(soapFaultException);
+
+        // Validation
+
+        Exception inputValidationException = new Exception(context, new ElementInfo("InputValidation"));
+        inputValidationException.setNumber(context.nextExceptionId());
+        context.registerInputValidationException(inputValidationException);
     }
 
     private ComplexType buildSoap11FaultComplexType()
@@ -313,8 +319,6 @@ public class TypesParser
                     context.registerCustomType(arrayType);
                 }
             }
-
-            fieldType.setRequired(Integer.parseInt(element.getMinOccurs()) > 0);
 
             field.setType(fieldType);
 
