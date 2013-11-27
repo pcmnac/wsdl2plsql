@@ -300,6 +300,20 @@ public class TypesParser
                     fieldType = new ComplexTypeDef(context, element.getType());
                 }
             }
+            else if (element.getEmbeddedType() != null)
+            {
+                if (element.getEmbeddedType() instanceof ComplexType)
+                {
+                    ComplexType subComplexType = (ComplexType) element.getEmbeddedType();
+                    subComplexType.setName(element.getName());
+                    subComplexType.setQname(new QName(subComplexType.getNamespaceUri(), element.getName()));
+
+                    fieldType = new ComplexTypeDef(context, new QName(subComplexType.getNamespaceUri(),
+                            element.getName()));
+
+                    dissectComplexType(subComplexType);
+                }
+            }
             else
             {
                 throw new ParsingException(String.format(

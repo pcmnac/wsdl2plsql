@@ -528,7 +528,7 @@ public class FunctionBodyWriter extends BaseWriter
             // tempNode := response.extrac('path');
             body.l();
             body.l(level, "-- extract value of %s", toXPathNode(element, loopVar));
-            body.l(level, "%s := %s.extract('%s/%s/text()', %s);", varTempNode.name(), response.name(), pathPrefix,
+            body.l(level, "%s := %s.extract('%s/%s/child::node()', %s);", varTempNode.name(), response.name(), pathPrefix,
                     toXPathNode(element, loopVar), varNsMap.name());
             // IF tempNode IS NOT NULL THEN
             body.l(level, "%s %s %s %s %s %s", ke.ifKey(), varTempNode.name(), ke.is(), ke.not(), ke.nullKey(),

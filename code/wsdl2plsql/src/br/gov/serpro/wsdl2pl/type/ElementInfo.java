@@ -34,7 +34,7 @@ public class ElementInfo
 
         if (element.getSchema() != null)
         {
-            if (element.getSchema().getElement(element.getQname()) != null)
+            if (element.getProperty("form").equals("qualified") || element.isToplevel()) //element.getSchema().getElement(element.getQname()) != null)
             {
                 setNamespace(element.getSchema().getTargetNamespace());
             }

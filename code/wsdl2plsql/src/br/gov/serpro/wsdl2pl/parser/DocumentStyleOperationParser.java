@@ -32,19 +32,22 @@ public class DocumentStyleOperationParser extends OperationParser
     {
         List<Parameter> parameters = new ArrayList<Parameter>();
 
-        for (Element element : message.getSequence().getElements())
+        if (message.getSequence() != null && message.getSequence().getElements() != null)
         {
-            element = getContext().findElement(element);
-
-            if (element.getType() != null)
+            for (Element element : message.getSequence().getElements())
             {
-                ElementInfo elementInfo = new ElementInfo(element);
-                Parameter parameter = new Parameter(getContext(), function, elementInfo);
+                element = getContext().findElement(element);
 
-                ITypeDef parameterType = getTypeDef(element.getType());
+                if (element.getType() != null)
+                {
+                    ElementInfo elementInfo = new ElementInfo(element);
+                    Parameter parameter = new Parameter(getContext(), function, elementInfo);
 
-                parameter.setType(parameterType);
-                parameters.add(parameter);
+                    ITypeDef parameterType = getTypeDef(element.getType());
+
+                    parameter.setType(parameterType);
+                    parameters.add(parameter);
+                }
             }
         }
 
