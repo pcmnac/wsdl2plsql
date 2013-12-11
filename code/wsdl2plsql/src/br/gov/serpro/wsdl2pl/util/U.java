@@ -122,7 +122,7 @@ public class U
         }
         else if (Arrays.asList(dateTypes).contains(xsdType))
         {
-            plType = ke.date();
+            plType = ke.timestampWithTimeZone();
         }
         else if (Arrays.asList(numberTypes).contains(xsdType))
         {
@@ -156,16 +156,16 @@ public class U
         TO_MASKS.put("boolean", "CASE $var WHEN true THEN 'true' ELSE 'false' END");
         TO_MASKS.put("date", "TO_CHAR($var, 'YYYY-MM-DD')");
         TO_MASKS.put("time", "TO_CHAR($var, 'HH24:MI:SS')");
-        TO_MASKS.put("datetime", "REPLACE(TO_CHAR($var,'YYYY-MM-DD HH24:MI:SS'),' ','T')");
+        TO_MASKS.put("datetime", "TO_CHAR($var,'YYYY-MM-DD\"T\"HH24:MI:SS.FF9TZH:TZM')");
         TO_MASKS.put("decimal", "TRIM(TO_CHAR($var, '9999999999.99'))");
         TO_MASKS.put("double", "TRIM(TO_CHAR($var, '9999999999.99'))");
         TO_MASKS.put("float", "TRIM(TO_CHAR($var, '9999999999.99'))");
 
         FROM_MASKS.put("decimal", "TO_NUMBER($var, '9999999999.99')");
         FROM_MASKS.put("boolean", "CASE LOWER($var) WHEN 'true' THEN true ELSE false END");
-        FROM_MASKS.put("date", "TO_DATE($var, 'YYYY-MM-DD')");
-        FROM_MASKS.put("time", "TO_DATE($var, 'HH24:MI:SS')");
-        FROM_MASKS.put("datetime", "TO_DATE(REPLACE($var,'T',' '), 'YYYY-MM-DD HH24:MI:SS')");
+        FROM_MASKS.put("date", "fc_to_date($var)");
+        FROM_MASKS.put("time", "fc_to_time($var)");
+        FROM_MASKS.put("datetime", "fc_to_datetime($var)");
         FROM_MASKS.put("integer", "TO_NUMBER($var)");
         FROM_MASKS.put("int", "TO_NUMBER($var)");
         FROM_MASKS.put("byte", "TO_NUMBER($var)");

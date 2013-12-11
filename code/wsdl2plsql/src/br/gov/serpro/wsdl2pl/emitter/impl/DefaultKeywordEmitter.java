@@ -295,4 +295,10 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
         return "RAISE_APPLICATION_ERROR";
     }
 
+    @Override
+    public String timestampWithTimeZone()
+    {
+        return "TIMESTAMP WITH TIME ZONE";
+    }
+
 }

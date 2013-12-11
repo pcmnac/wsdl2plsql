@@ -40,7 +40,7 @@ public class FunctionBodyWriter extends BaseWriter
         // CREATE OR REPLACE PACKAGE BODY packageName AS
         functions.l("%s %s %s %s %s\n", ke.createOrReplace(), ke.packageKey(), ke.body(), packageName, ke.as());
 
-        functions.a(generatePostFunction());
+        functions.a(generateUtilFunctions());
         functions.a("\n");
 
         if (!getContext().getPlFunctions().isEmpty())
@@ -549,15 +549,15 @@ public class FunctionBodyWriter extends BaseWriter
         return toQName(element) + (loopVar != null ? "[' || " + loopVar + " || ']" : "");
     }
 
-    private String generatePostFunction() throws IOException
+    private String generateUtilFunctions() throws IOException
     {
         StringBuilder postFunction = new StringBuilder();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getClassLoader()
-                .getResourceAsStream("post-function-template.txt")));
+                .getResourceAsStream("util-functions-template.txt")));
         while (reader.ready())
         {
-            postFunction.append("  " + reader.readLine() + "\n");
+            postFunction.append(reader.readLine() + "\n");
         }
 
         reader.close();

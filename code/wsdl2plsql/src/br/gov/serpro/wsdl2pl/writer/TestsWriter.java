@@ -371,15 +371,15 @@ public class TestsWriter extends BaseWriter
         }
         else if (Arrays.asList(dateTypes).contains(xsdType))
         {
-            result = "TO_DATE('2013-01-01', 'YYYY-MM-DD')";
+            result = "TO_TIMESTAMP_TZ('2014-01-01', 'YYYY-MM-DDTZH:TZM')";
         }
         else if (Arrays.asList(timeTypes).contains(xsdType))
         {
-            result = "TO_DATE('2013-01-01', 'HH24:MI:SS')";
+            result = "TO_TIMESTAMP_TZ('13:53:11', 'HH24:MI:SS.FF9TZH:TZM')";
         }
         else if (Arrays.asList(dateTimeTypes).contains(xsdType))
         {
-            result = "TO_DATE(REPLACE('2013-01-01','T',' '), 'YYYY-MM-DD HH24:MI:SS')";
+            result = "TO_TIMESTAMP_TZ('2014-01-01T12:55:10.456-03:00', 'YYYY-MM-DD\"T\"HH24:MI:SS.FF9TZH:TZM')";
         }
         else if (Arrays.asList(numberTypes).contains(xsdType))
         {

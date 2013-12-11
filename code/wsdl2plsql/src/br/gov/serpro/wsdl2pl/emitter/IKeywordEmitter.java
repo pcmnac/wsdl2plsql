@@ -77,6 +77,8 @@ public interface IKeywordEmitter
     String integer();
 
     String date();
+    
+    String timestampWithTimeZone();
 
     String exception();
 
