@@ -305,7 +305,7 @@ public class FunctionBodyWriter extends BaseWriter
                 // DECLARE
                 body.l(level, ke.declare());
 
-                LocalVar recordXml = new LocalVar(getContext(), "recordXml" + level, ke.varchar2() + "(32767)", "");
+                LocalVar recordXml = new LocalVar(getContext(), "recordXml" + level, ke.clob(), "");
                 body.l(level + 1, recordXml.decl());
 
                 // BEGIN
@@ -535,8 +535,10 @@ public class FunctionBodyWriter extends BaseWriter
                     ke.then());
 
             // var := (tempNode.stringVal());
+            String extractionMethod = type.getXsdType().getLocalPart().equalsIgnoreCase("base64binary") ? ".getClobVal()" : ".getStringVal()";
+            
             body.l(level + 1, "%s := %s;", prefix + name,
-                    U.stringToBaseType(type.getXsdType().getLocalPart(), varTempNode.name() + ".getStringVal()"));
+                    U.stringToBaseType(type.getXsdType().getLocalPart(), varTempNode.name() + extractionMethod));
             // END IF;
             body.l(level, "%s %s;", ke.end(), ke.ifKey());
         }

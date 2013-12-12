@@ -99,6 +99,8 @@ public interface IKeywordEmitter
     String pragma();
     
     String raiseApplicationError();
+
+    String blob();
     
     
 

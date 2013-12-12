@@ -321,9 +321,11 @@ public class TestsWriter extends BaseWriter
         }
         else
         {
+            String varValue = type.getXsdType().getLocalPart().equalsIgnoreCase("base64binary") ? "'<<BASE64 BINARY DATA (' || length("
+                    + var + ") || ' bytes)>>'"
+                    : U.baseTypeToString(type.getXsdType().getLocalPart(), var);
 
-            block.l(indent, "dbms_output.put_line('%s%s: ' || %s);", indent(depth), varName,
-                    U.baseTypeToString(type.getXsdType().getLocalPart(), var));
+            block.l(indent, "dbms_output.put_line('%s%s: ' || %s);", indent(depth), varName, varValue);
         }
 
         return block.toString();
@@ -367,7 +369,7 @@ public class TestsWriter extends BaseWriter
         }
         else if (Arrays.asList(longStringTypes).contains(xsdType))
         {
-            result = "'abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef abcdef'";
+            result = "NULL";
         }
         else if (Arrays.asList(dateTypes).contains(xsdType))
         {

@@ -301,4 +301,10 @@ public class DefaultKeywordEmitter implements IKeywordEmitter
         return "TIMESTAMP WITH TIME ZONE";
     }
 
+    @Override
+    public String blob()
+    {
+        return "BLOB";
+    }
+
 }

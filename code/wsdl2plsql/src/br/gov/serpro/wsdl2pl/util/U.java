@@ -118,7 +118,7 @@ public class U
         }
         else if (Arrays.asList(longStringTypes).contains(xsdType))
         {
-            plType = ke.clob();
+            plType = ke.blob();
         }
         else if (Arrays.asList(dateTypes).contains(xsdType))
         {
@@ -160,6 +160,7 @@ public class U
         TO_MASKS.put("decimal", "TRIM(TO_CHAR($var, '9999999999.99'))");
         TO_MASKS.put("double", "TRIM(TO_CHAR($var, '9999999999.99'))");
         TO_MASKS.put("float", "TRIM(TO_CHAR($var, '9999999999.99'))");
+        TO_MASKS.put("base64binary", "encode_base64($var)");
 
         FROM_MASKS.put("decimal", "TO_NUMBER($var, '9999999999.99')");
         FROM_MASKS.put("boolean", "CASE LOWER($var) WHEN 'true' THEN true ELSE false END");
@@ -171,6 +172,7 @@ public class U
         FROM_MASKS.put("byte", "TO_NUMBER($var)");
         FROM_MASKS.put("short", "TO_NUMBER($var)");
         FROM_MASKS.put("long", "TO_NUMBER($var)");
+        FROM_MASKS.put("base64binary", "decode_base64($var)");
     }
 
     public static String stringToBaseType(String xsdType, String var)
