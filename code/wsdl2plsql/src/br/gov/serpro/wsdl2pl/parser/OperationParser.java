@@ -7,6 +7,8 @@ import br.gov.serpro.wsdl2pl.type.ElementInfo;
 import br.gov.serpro.wsdl2pl.type.Exception;
 import br.gov.serpro.wsdl2pl.type.Function;
 import br.gov.serpro.wsdl2pl.type.Parameter;
+import br.gov.serpro.wsdl2pl.type.VarrayType;
+import br.gov.serpro.wsdl2pl.type.def.ArrayTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ComplexTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 import br.gov.serpro.wsdl2pl.type.def.SimpleTypeDef;
@@ -243,7 +245,19 @@ public abstract class OperationParser
 
             if (!complexType.getSequence().getElements().isEmpty())
             {
-                returnType = getTypeDef(complexType.getSequence().getElements().get(0).getType());
+                Element partElement = complexType.getSequence().getElements().get(0);
+
+                boolean isArray = partElement.getMaxOccurs().equals("unbounded")
+                        || Integer.parseInt(partElement.getMaxOccurs()) > 1;
+
+                returnType = getTypeDef(partElement.getType());
+                
+                if (isArray)
+                {
+                    VarrayType arrayType = new VarrayType(getContext(), returnType);
+
+                    returnType = new ArrayTypeDef(getContext(), arrayType.getType());
+                }
             }
         }
 
@@ -262,8 +276,23 @@ public abstract class OperationParser
         else if (part.getElement() != null)
         {
             Element element = getContext().findElement(part.getElement());
+            
+            boolean isArray = element.getMaxOccurs().equals("unbounded")
+                    || Integer.parseInt(element.getMaxOccurs()) > 1;
+            
             param = new Parameter(getContext(), function, new ElementInfo(element), direction, header);
-            param.setType(getTypeDef(element.getType()));
+            
+            
+            ITypeDef parameterType = getTypeDef(element.getType());
+
+            if (isArray)
+            {
+                VarrayType arrayType = new VarrayType(getContext(), parameterType);
+
+                parameterType = new ArrayTypeDef(getContext(), arrayType.getType());
+            }
+            
+            param.setType(parameterType);
         }
 
         if (param == null)
@@ -272,7 +301,6 @@ public abstract class OperationParser
         }
 
         return param;
-
     }
 
     protected void processFaults(Operation operation, BindingOperation bindingOperation, Function function)

@@ -7,6 +7,8 @@ import br.gov.serpro.wsdl2pl.exception.ParsingException;
 import br.gov.serpro.wsdl2pl.type.ElementInfo;
 import br.gov.serpro.wsdl2pl.type.Function;
 import br.gov.serpro.wsdl2pl.type.Parameter;
+import br.gov.serpro.wsdl2pl.type.VarrayType;
+import br.gov.serpro.wsdl2pl.type.def.ArrayTypeDef;
 import br.gov.serpro.wsdl2pl.type.def.ITypeDef;
 
 import com.predic8.schema.ComplexType;
@@ -37,6 +39,9 @@ public class DocumentStyleOperationParser extends OperationParser
             for (Element element : message.getSequence().getElements())
             {
                 element = getContext().findElement(element);
+                
+                boolean isArray = element.getMaxOccurs().equals("unbounded")
+                        || Integer.parseInt(element.getMaxOccurs()) > 1;
 
                 if (element.getType() != null)
                 {
@@ -44,6 +49,13 @@ public class DocumentStyleOperationParser extends OperationParser
                     Parameter parameter = new Parameter(getContext(), function, elementInfo);
 
                     ITypeDef parameterType = getTypeDef(element.getType());
+
+                    if (isArray)
+                    {
+                        VarrayType arrayType = new VarrayType(getContext(), parameterType);
+
+                        parameterType = new ArrayTypeDef(getContext(), arrayType.getType());
+                    }
 
                     parameter.setType(parameterType);
                     parameters.add(parameter);

@@ -172,6 +172,7 @@ public class U
         FROM_MASKS.put("byte", "TO_NUMBER($var)");
         FROM_MASKS.put("short", "TO_NUMBER($var)");
         FROM_MASKS.put("long", "TO_NUMBER($var)");
+        FROM_MASKS.put("double", "TO_NUMBER($var, '9999999999.99')");
         FROM_MASKS.put("base64binary", "decode_base64($var)");
     }
 
