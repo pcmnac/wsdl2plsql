@@ -18,7 +18,9 @@ import br.gov.serpro.wsdl2pl.util.U;
 
 import com.predic8.schema.ComplexType;
 import com.predic8.schema.Element;
+import com.predic8.schema.ModelGroup;
 import com.predic8.schema.Schema;
+import com.predic8.schema.SchemaComponent;
 import com.predic8.schema.TypeDefinition;
 import com.predic8.wsdl.AbstractSOAPBody;
 import com.predic8.wsdl.AbstractSOAPFault;
@@ -238,27 +240,38 @@ public abstract class OperationParser
             Element resultElement = context.findElement(part.getElement());
             ComplexType complexType = getComplexType(resultElement);
 
-            if (complexType.getSequence().getElements().size() > 1)
+            SchemaComponent schemaComponent = complexType.getModel();
+
+            if (schemaComponent instanceof ModelGroup)
             {
-                throw new ParsingException("Return complex type should be at most one child:" + complexType);
-            }
-
-            if (!complexType.getSequence().getElements().isEmpty())
-            {
-                Element partElement = complexType.getSequence().getElements().get(0);
-
-                boolean isArray = partElement.getMaxOccurs().equals("unbounded")
-                        || Integer.parseInt(partElement.getMaxOccurs()) > 1;
-
-                returnType = getTypeDef(partElement.getType());
-                
-                if (isArray)
+                ModelGroup modelGroup = (ModelGroup) schemaComponent;
+                if (modelGroup.getElements().size() > 1)
                 {
-                    VarrayType arrayType = new VarrayType(getContext(), returnType);
+                    throw new ParsingException("Return complex type should be at most one child:" + complexType);
+                }
 
-                    returnType = new ArrayTypeDef(getContext(), arrayType.getType());
+                if (!modelGroup.getElements().isEmpty())
+                {
+                    Element partElement = complexType.getSequence().getElements().get(0);
+
+                    boolean isArray = partElement.getMaxOccurs().equals("unbounded")
+                            || Integer.parseInt(partElement.getMaxOccurs()) > 1;
+
+                    returnType = getTypeDef(partElement.getType());
+
+                    if (isArray)
+                    {
+                        VarrayType arrayType = new VarrayType(getContext(), returnType);
+
+                        returnType = new ArrayTypeDef(getContext(), arrayType.getType());
+                    }
                 }
             }
+            else
+            {
+                throw new ParsingException("schemaComponent should be a valid model group:" + complexType);
+            }
+
         }
 
         return returnType;
@@ -276,13 +289,12 @@ public abstract class OperationParser
         else if (part.getElement() != null)
         {
             Element element = getContext().findElement(part.getElement());
-            
+
             boolean isArray = element.getMaxOccurs().equals("unbounded")
                     || Integer.parseInt(element.getMaxOccurs()) > 1;
-            
+
             param = new Parameter(getContext(), function, new ElementInfo(element), direction, header);
-            
-            
+
             ITypeDef parameterType = getTypeDef(element.getType());
 
             if (isArray)
@@ -291,7 +303,7 @@ public abstract class OperationParser
 
                 parameterType = new ArrayTypeDef(getContext(), arrayType.getType());
             }
-            
+
             param.setType(parameterType);
         }
 
