@@ -41,15 +41,18 @@ public class wsdl2plsql implements Runnable
     private String destDir;
     private int operationsPerPackage;
     private String[] operations;
+    private String[] services;
 
     private static final Logger L = LoggerFactory.getLogger(wsdl2plsql.class);
 
-    public wsdl2plsql(String wsdlUrl, String packageName, String destDir, String[] operations, int operationsPerPackage)
+    public wsdl2plsql(String wsdlUrl, String packageName, String destDir, String[] services, String[] operations,
+            int operationsPerPackage)
     {
         this.wsdlUrl = wsdlUrl;
         this.packageName = packageName;
         this.destDir = destDir;
         this.operations = operations;
+        this.services = services;
         this.operationsPerPackage = operationsPerPackage;
     }
 
@@ -65,6 +68,7 @@ public class wsdl2plsql implements Runnable
 
         Context context = new Context(defs);
 
+        context.setServices(services);
         context.setPackageName(packageName);
         context.resolveProtocol(K.Protocol.SOAP_1_2);
 
@@ -259,10 +263,25 @@ public class wsdl2plsql implements Runnable
         options.addOption(OptionBuilder//
                 .withArgName("path")//
                 .hasArg()//
-                .withLongOpt("wsdl-operations-file-path")//
+                .withLongOpt("wsdl-operations-list-path")//
                 .withDescription(
-                        "Path to a *.properties file with the list of operations (one per line) to be included in the generation task. Can be used ")//
-                .create("wp"));
+                        "Path to a *.properties file with the list of operations (one per line) to be included in the generation task.")//
+                .create("wop"));
+
+        options.addOption(OptionBuilder//
+                .withArgName("s1,s2...")//
+                .hasArg()//
+                .withLongOpt("wsdl-services")//
+                .withDescription("Comma-separated list of services to be included in the generation task.")//
+                .create("ws"));
+
+        options.addOption(OptionBuilder//
+                .withArgName("path")//
+                .hasArg()//
+                .withLongOpt("wsdl-services-list-path")//
+                .withDescription(
+                        "Path to a *.properties file with the list of services (one per line) to be included in the generation task.")//
+                .create("wsp"));
 
         CommandLineParser parser = new BasicParser();
         try
@@ -308,11 +327,11 @@ public class wsdl2plsql implements Runnable
                 operations.addAll(Arrays.asList(line.getOptionValue("wo").split(",")));
             }
 
-            if (line.hasOption("wp"))
+            if (line.hasOption("wop"))
             {
                 Properties properties = new Properties();
 
-                properties.load(new FileInputStream(line.getOptionValue("wp")));
+                properties.load(new FileInputStream(line.getOptionValue("wop")));
 
                 operations.addAll(properties.stringPropertyNames());
             }
@@ -323,8 +342,27 @@ public class wsdl2plsql implements Runnable
             }
 
             String[] ops = new String[operations.size()];
-            wsdl2plsql wsdl2plsql = new wsdl2plsql(wsdl, packageName, dest, operations.toArray(ops),
-                    operationsPerPackage);
+
+            List<String> services = new ArrayList<String>();
+
+            if (line.hasOption("ws"))
+            {
+                services.addAll(Arrays.asList(line.getOptionValue("ws").split(",")));
+            }
+
+            if (line.hasOption("wsp"))
+            {
+                Properties properties = new Properties();
+
+                properties.load(new FileInputStream(line.getOptionValue("wsp")));
+
+                services.addAll(properties.stringPropertyNames());
+            }
+
+            String[] srvs = new String[services.size()];
+
+            wsdl2plsql wsdl2plsql = new wsdl2plsql(wsdl, packageName, dest, services.toArray(srvs),
+                    operations.toArray(ops), operationsPerPackage);
 
             try
             {

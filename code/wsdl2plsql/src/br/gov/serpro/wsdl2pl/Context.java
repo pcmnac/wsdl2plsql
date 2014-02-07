@@ -66,6 +66,8 @@ public class Context
 
     private int exceptionId = 20000;
 
+    private String[] services;
+
     public String getPackageName()
     {
         return packageName;
@@ -327,7 +329,7 @@ public class Context
     {
         String[] supported = { K.Protocol.SOAP_1_2, K.Protocol.SOAP_1_1 };
 
-        if (getDefs().getServices().size() == 1)
+        if (getDefs().getServices().size() > 0)
         {
             Service service = getDefs().getServices().get(0);
             for (String supportedProtocol : supported)
@@ -364,4 +366,15 @@ public class Context
     {
         return -++exceptionId;
     }
+
+    public String[] getServices()
+    {
+        return services;
+    }
+
+    public void setServices(String[] services)
+    {
+        this.services = services;
+    }
+
 }

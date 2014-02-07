@@ -1,5 +1,7 @@
 package br.gov.serpro.wsdl2pl.parser;
 
+import java.util.Arrays;
+
 import br.gov.serpro.wsdl2pl.Context;
 
 import com.predic8.wsdl.AbstractBinding;
@@ -25,37 +27,39 @@ public class OperationsParser
     {
         for (Service service : context.getDefs().getServices())
         {
-            for (Port port : service.getPorts())
+            if (context.getServices() == null || Arrays.asList(context.getServices()).contains(service.getName()))
             {
-                Binding binding = port.getBinding();
-
-                Object protocol = binding.getProtocol();
-
-                AbstractBinding abstractBinding = binding.getBinding();
-
-                if (protocol.equals(context.getProtocol()))
+                for (Port port : service.getPorts())
                 {
-                    AbstractSOAPBinding soapBinding = (AbstractSOAPBinding) abstractBinding;
+                    Binding binding = port.getBinding();
 
-                    String defaultStyle = (String) soapBinding.getStyle();
-                    PortType portType = binding.getPortType();
+                    Object protocol = binding.getProtocol();
 
-                    for (Operation operation : portType.getOperations())
+                    AbstractBinding abstractBinding = binding.getBinding();
+
+                    if (protocol.equals(context.getProtocol()))
                     {
-                        BindingOperation bindingOperation = binding.getOperation(operation.getName());
+                        AbstractSOAPBinding soapBinding = (AbstractSOAPBinding) abstractBinding;
 
-                        ExtensibilityOperation extensibilityOperation = bindingOperation.getOperation();
+                        String defaultStyle = (String) soapBinding.getStyle();
+                        PortType portType = binding.getPortType();
 
-                        String operationStyle = extensibilityOperation.getStyle() != null ? extensibilityOperation
-                                .getStyle() : defaultStyle;
+                        for (Operation operation : portType.getOperations())
+                        {
+                            BindingOperation bindingOperation = binding.getOperation(operation.getName());
 
-                        OperationParser parser = OperationParser.getInstance(context, operationStyle);
+                            ExtensibilityOperation extensibilityOperation = bindingOperation.getOperation();
 
-                        parser.parse(port, operation, bindingOperation);
+                            String operationStyle = extensibilityOperation.getStyle() != null ? extensibilityOperation
+                                    .getStyle() : defaultStyle;
+
+                            OperationParser parser = OperationParser.getInstance(context, operationStyle);
+
+                            parser.parse(port, operation, bindingOperation);
+                        }
                     }
                 }
             }
         }
     }
-
 }

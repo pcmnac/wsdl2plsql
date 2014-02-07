@@ -46,20 +46,32 @@ public class TypesParser
     {
         for (Types types : context.getDefs().getTypes())
         {
-
             for (Schema schema : types.getSchemas())
             {
-                for (SimpleType simpleType : schema.getSimpleTypes())
-                {
-                    dissectSimpleType(simpleType);
-                }
+                parse(schema);
+            }
+        }
+    }
 
-                addDefaultExceptions();
+    private void parse(Schema schema)
+    {
+        if (schema.getImportedSchemas() != null)
+        {
+            for (Schema importedSchema : schema.getImportedSchemas())
+            {
+                parse(importedSchema);
+            }
 
-                for (ComplexType complexType : schema.getComplexTypes())
-                {
-                    dissectComplexType(complexType);
-                }
+            for (SimpleType simpleType : schema.getSimpleTypes())
+            {
+                dissectSimpleType(simpleType);
+            }
+
+            addDefaultExceptions();
+
+            for (ComplexType complexType : schema.getComplexTypes())
+            {
+                dissectComplexType(complexType);
             }
         }
     }

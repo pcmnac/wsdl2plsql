@@ -100,6 +100,11 @@ public abstract class OperationParser
 
         Function function = createFunctionAndInputParameters(operation, inputSoapBody);
 
+        if (operation.getDocumentation() != null)
+        {
+            function.setDocumentation(operation.getDocumentation().getContent());
+        }
+
         // INPUT HEADER
 
         if (inputSoapHeader != null)

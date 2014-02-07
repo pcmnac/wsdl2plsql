@@ -16,6 +16,7 @@ public class Function extends DerivedSymbol implements Identifiable<String>
     private List<Parameter> parameters = new ArrayList<Parameter>();
     private Parameter inputHeader;
     private Parameter outputHeader;
+    private String documentation;
 
     private ITypeDef returnType;
     private ElementInfo returnElement;
@@ -93,6 +94,16 @@ public class Function extends DerivedSymbol implements Identifiable<String>
         this.outputHeader = outputHeader;
     }
 
+    public String getDocumentation()
+    {
+        return documentation;
+    }
+
+    public void setDocumentation(String documentation)
+    {
+        this.documentation = documentation;
+    }
+
     public List<Exception> getExceptions()
     {
         return exceptions;
@@ -103,10 +114,80 @@ public class Function extends DerivedSymbol implements Identifiable<String>
         getExceptions().add(exception);
     }
 
-    public String comments()
+    public String comments(int indent)
     {
-        return new QName(getElement().getNamespace(), getElement().getName(), getContext().getPrefix(
+        String comments = new QName(getElement().getNamespace(), getElement().getName(), getContext().getPrefix(
                 getElement().getNamespace())).toString();
+
+        if (documentation != null)
+        {
+            comments += "\n" + documentation;
+        }
+
+        return formatDocumentation(indent, comments);
+    }
+
+    public String doc(int indent)
+    {
+        SB function = new SB();
+
+        function.l(indent, "/**");
+        function.a(comments(indent));
+        function.l(indent, " * ");
+        function.l(indent, " * @author wsdl2plsql (generated)");
+        function.l(indent, " * ");
+
+        for (Parameter parameter : getParameters())
+        {
+            function.l(indent, " * @param %s %s", parameter.name(), parameter.getElement());
+        }
+        if (getInputHeader() != null)
+        {
+            function.l(indent, " * @param %s %s", getInputHeader().name(), getInputHeader().getElement());
+        }
+        if (getOutputHeader() != null)
+        {
+            function.l(indent, " * @param %s %s", getOutputHeader().name(), getOutputHeader().getElement());
+        }
+        function.l(indent, " * @param %s %s", getUrlParam().name(), "Service URL");
+
+        if (!isVoid())
+        {
+            function.l(indent, " * ");
+            function.l(indent, " * @return %s", getReturnElement());
+        }
+
+        function.l(indent, " * ");
+
+        function.l(indent, " * @throws " + getContext().getSoapFaultException().name());
+
+        for (Exception exception : getExceptions())
+        {
+            function.l(indent, " * @throws " + exception.name());
+        }
+
+        function.l(indent, " * ");
+        function.l(indent, " */ ");
+
+        return function.toString();
+    }
+
+    public static String formatDocumentation(int indent, String text)
+    {
+        SB doc = new SB();
+        String lines[] = text.split("\\n");
+
+        for (int i = 0; i < lines.length; i++)
+        {
+            String line = lines[i];
+
+            if ((i > 0 && i < lines.length - 1) || !line.trim().isEmpty())
+            {
+                doc.l(indent, " * " + line);
+            }
+        }
+
+        return doc.toString();
     }
 
     public boolean isVoid()

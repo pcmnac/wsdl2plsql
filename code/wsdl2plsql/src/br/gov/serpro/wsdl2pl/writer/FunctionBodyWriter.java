@@ -79,7 +79,7 @@ public class FunctionBodyWriter extends BaseWriter
                         getContext().registerUsedException(exception);
                     }
 
-                    functions.l(INDENT, "-- " + function.comments());
+                    // functions.l(INDENT, "-- " + function.comments(INDENT));
                     functions.a(writeFunctionBody(function) + "\n");
                 }
             }
@@ -528,15 +528,16 @@ public class FunctionBodyWriter extends BaseWriter
             // tempNode := response.extrac('path');
             body.l();
             body.l(level, "-- extract value of %s", toXPathNode(element, loopVar));
-            body.l(level, "%s := %s.extract('%s/%s/child::node()', %s);", varTempNode.name(), response.name(), pathPrefix,
-                    toXPathNode(element, loopVar), varNsMap.name());
+            body.l(level, "%s := %s.extract('%s/%s/child::node()', %s);", varTempNode.name(), response.name(),
+                    pathPrefix, toXPathNode(element, loopVar), varNsMap.name());
             // IF tempNode IS NOT NULL THEN
             body.l(level, "%s %s %s %s %s %s", ke.ifKey(), varTempNode.name(), ke.is(), ke.not(), ke.nullKey(),
                     ke.then());
 
             // var := (tempNode.stringVal());
-            String extractionMethod = type.getXsdType().getLocalPart().equalsIgnoreCase("base64binary") ? ".getClobVal()" : ".getStringVal()";
-            
+            String extractionMethod = type.getXsdType().getLocalPart().equalsIgnoreCase("base64binary") ? ".getClobVal()"
+                    : ".getStringVal()";
+
             body.l(level + 1, "%s := %s;", prefix + name,
                     U.stringToBaseType(type.getXsdType().getLocalPart(), varTempNode.name() + extractionMethod));
             // END IF;
