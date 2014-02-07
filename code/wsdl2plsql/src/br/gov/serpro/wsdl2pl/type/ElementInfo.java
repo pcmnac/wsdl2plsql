@@ -34,13 +34,14 @@ public class ElementInfo
 
         if (element.getSchema() != null)
         {
-            if (element.isToplevel()) //element.getSchema().getElement(element.getQname()) != null)
+            if (element.isToplevel()) // element.getSchema().getElement(element.getQname()) != null)
             {
                 setNamespace(element.getSchema().getTargetNamespace());
             }
             else
             {
-                if (element.getSchema().getElementFormDefault().equals("qualified"))
+                if (element.getSchema().getElementFormDefault().equals("qualified")
+                        || "qualified".equals(element.getForm()))
                 {
                     setNamespace(element.getSchema().getTargetNamespace());
                 }
