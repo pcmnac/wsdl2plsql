@@ -27,7 +27,8 @@ public class OperationsParser
     {
         for (Service service : context.getDefs().getServices())
         {
-            if (context.getServices() == null || Arrays.asList(context.getServices()).contains(service.getName()))
+            if (context.getServices() == null || context.getServices().length == 0
+                    || Arrays.asList(context.getServices()).contains(service.getName()))
             {
                 for (Port port : service.getPorts())
                 {
