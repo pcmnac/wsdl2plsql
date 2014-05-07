@@ -261,9 +261,23 @@ public class Context
     {
         Map<String, String> nsc = (Map<String, String>) getDefs().getNamespaceContext();
 
+        int count = 1;
         for (String prefix : nsc.keySet())
         {
-            namespacePrefixes.put(nsc.get(prefix), prefix);
+            if ("".equals(prefix))
+            {
+                prefix = "ns" + count++;
+
+                while (namespacePrefixes.containsValue(prefix))
+                {
+                    prefix = "ns" + count++;
+                }
+                namespacePrefixes.put(nsc.get(""), prefix);
+            }
+            else
+            {
+                namespacePrefixes.put(nsc.get(prefix), prefix);
+            }
         }
 
         if (!namespacePrefixes.containsKey(K.Uri.SOAP_ENVELOPE))
@@ -297,7 +311,8 @@ public class Context
 
         for (String uri : namespacePrefixes.keySet())
         {
-            decl += "xmlns:" + namespacePrefixes.get(uri) + "=\"" + uri + "\" ";
+            String prefix = namespacePrefixes.get(uri);
+            decl += "xmlns:" + prefix + "=\"" + uri + "\" ";
         }
 
         return decl;

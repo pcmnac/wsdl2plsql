@@ -59,7 +59,7 @@
         utl_http.set_detailed_excp_support(enable => FALSE);
     
         -- send request
-        wl_request := utl_http.begin_request(wp_url, 'POST','HTTP/1.0');
+        wl_request := utl_http.begin_request(wp_url, 'POST','HTTP/1.1');
         utl_http.set_header(wl_request, 'Content-Type', 'text/xml');
         utl_http.set_header(wl_request, 'Content-Length', wl_length);
         
