@@ -539,7 +539,7 @@ public class FunctionBodyWriter extends BaseWriter
                     : ".getStringVal()";
 
             body.l(level + 1, "%s := %s;", prefix + name,
-                    U.stringToBaseType(type.getXsdType().getLocalPart(), varTempNode.name() + extractionMethod));
+                    U.stringToBaseType(type.getXsdType().getLocalPart(), "dbms_xmlgen.convert(" + varTempNode.name() + extractionMethod + ", dbms_xmlgen.entity_decode)"));
             // END IF;
             body.l(level, "%s %s;", ke.end(), ke.ifKey());
         }
