@@ -94,10 +94,12 @@ public class U
     {
         String plType = null;
 
-        String[] stringTypes = { "string", "ENTITIES", "ENTITY", "ID", "IDREF", "IDREFS", "language", "Name", "NCName",
+        String[] stringTypes = { "ENTITIES", "ENTITY", "ID", "IDREF", "IDREFS", "language", "Name", "NCName",
                 "NMTOKEN", "NMTOKENS", "normalizedString", "QName", "token" };
 
-        String[] longStringTypes = { "base64Binary" };
+        String[] longStringTypes = { "string" };
+
+        String[] binaryTypes = { "base64Binary" };
 
         String[] dateTypes = { "date", "dateTime", "time" };
 
@@ -117,6 +119,10 @@ public class U
             plType = ke.varchar2() + s;
         }
         else if (Arrays.asList(longStringTypes).contains(xsdType))
+        {
+            plType = ke.clob();
+        }
+        else if (Arrays.asList(binaryTypes).contains(xsdType))
         {
             plType = ke.blob();
         }
