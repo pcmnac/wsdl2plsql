@@ -535,11 +535,8 @@ public class FunctionBodyWriter extends BaseWriter
                     ke.then());
 
             // var := (tempNode.stringVal());
-            String extractionMethod = type.getXsdType().getLocalPart().equalsIgnoreCase("base64binary") ? ".getClobVal()"
-                    : ".getStringVal()";
-
             body.l(level + 1, "%s := %s;", prefix + name,
-                    U.stringToBaseType(type.getXsdType().getLocalPart(), "dbms_xmlgen.convert(" + varTempNode.name() + extractionMethod + ", dbms_xmlgen.entity_decode)"));
+                    U.stringToBaseType(type.getXsdType().getLocalPart(), "dbms_xmlgen.convert(" + varTempNode.name() + ".getClobVal()" + ", dbms_xmlgen.entity_decode)"));
             // END IF;
             body.l(level, "%s %s;", ke.end(), ke.ifKey());
         }
