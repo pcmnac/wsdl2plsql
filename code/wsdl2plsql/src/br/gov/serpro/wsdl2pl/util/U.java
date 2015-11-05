@@ -167,7 +167,7 @@ public class U
         TO_MASKS.put("double", "TRIM(TO_CHAR($var, '9999999999.99'))");
         TO_MASKS.put("float", "TRIM(TO_CHAR($var, '9999999999.99'))");
         TO_MASKS.put("base64binary", "encode_base64($var)");
-        TO_MASKS.put("string", "<[!CDATA[ $var ]]>)");
+        TO_MASKS.put("string", "dbms_xmlgen.convert($var, dbms_xmlgen.entity_encode)");
 
         FROM_MASKS.put("decimal", "TO_NUMBER($var, '9999999999.99')");
         FROM_MASKS.put("boolean", "CASE LOWER($var) WHEN 'true' THEN true ELSE false END");
