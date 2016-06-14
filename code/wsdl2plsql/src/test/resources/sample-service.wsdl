@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<definitions xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://www.oracle-base.com/webservices/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns="http://schemas.xmlsoap.org/wsdl/" targetNamespace="http://www.oracle-base.com/webservices/">
+<types>
+<xsd:schema targetNamespace="http://www.oracle-base.com/webservices/"
+>
+</xsd:schema>
+</types>
+<message name="ws_addRequest">
+  <part name="int1" type="xsd:string" />
+  <part name="int2" type="xsd:string" /></message>
+<message name="ws_addResponse">
+  <part name="return" type="xsd:string" /></message>
+<portType name="CalculatorPortType">
+  <operation name="ws_add">
+    <input message="tns:ws_addRequest"/>
+    <output message="tns:ws_addResponse"/>
+  </operation>
+</portType>
+<binding name="CalculatorBinding" type="tns:CalculatorPortType">
+  <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+  <operation name="ws_add">
+    <soap:operation soapAction="https://oracle-base.com/webservices/server.php/ws_add" style="rpc"/>
+    <input><soap:body use="encoded" namespace="http://www.oracle-base.com/webservices/" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+    <output><soap:body use="encoded" namespace="http://www.oracle-base.com/webservices/" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+  </operation>
+</binding>
+<service name="Calculator">
+  <port name="CalculatorPort" binding="tns:CalculatorBinding">
+    <soap:address location="https://oracle-base.com:443/webservices/server.php"/>
+  </port>
+</service>
+</definitions> 
+

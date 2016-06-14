@@ -27,7 +27,7 @@ import com.predic8.wsdl.Service;
 
 /**
  * @author 04343650413
- * 
+ *
  */
 public class Context
 {
@@ -67,6 +67,8 @@ public class Context
     private int exceptionId = 20000;
 
     private String[] services;
+
+	private boolean debugging;
 
     public String getPackageName()
     {
@@ -391,5 +393,13 @@ public class Context
     {
         this.services = services;
     }
+
+	public void setDebuggingMode(boolean b) {
+		this.debugging = b;
+	}
+
+	public boolean isDebuggingMode() {
+		return this.debugging;
+	}
 
 }

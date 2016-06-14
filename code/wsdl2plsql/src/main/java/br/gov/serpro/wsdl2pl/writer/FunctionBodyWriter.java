@@ -553,8 +553,13 @@ public class FunctionBodyWriter extends BaseWriter
     {
         StringBuilder postFunction = new StringBuilder();
 
+        String resname = "util-functions-template-nodebug.txt";
+        if (getContext().isDebuggingMode())
+        {
+            resname = "util-functions-template.txt";
+        }
         BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getClassLoader()
-                .getResourceAsStream("util-functions-template.txt")));
+                .getResourceAsStream(resname)));
         while (reader.ready())
         {
             postFunction.append(reader.readLine() + "\n");
