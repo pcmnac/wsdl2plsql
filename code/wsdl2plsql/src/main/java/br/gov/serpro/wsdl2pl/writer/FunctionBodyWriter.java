@@ -1,8 +1,14 @@
 package br.gov.serpro.wsdl2pl.writer;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.HashMap;
+
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 
 import br.gov.serpro.wsdl2pl.Context;
 import br.gov.serpro.wsdl2pl.emitter.IKeywordEmitter;
@@ -551,23 +557,17 @@ public class FunctionBodyWriter extends BaseWriter
 
     private String generateUtilFunctions() throws IOException
     {
-        StringBuilder postFunction = new StringBuilder();
+        MustacheFactory mf = new DefaultMustacheFactory();
+        InputStreamReader template = new InputStreamReader(getClass().getClassLoader()
+                .getResourceAsStream("util-functions.txt.mustache"));
+		Mustache m = mf.compile(template, "util-functions");
 
-        String resname = "util-functions-template-nodebug.txt";
-        if (getContext().isDebuggingMode())
-        {
-            resname = "util-functions-template.txt";
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getClassLoader()
-                .getResourceAsStream(resname)));
-        while (reader.ready())
-        {
-            postFunction.append(reader.readLine() + "\n");
-        }
+		HashMap<String, Object> templateVars = new HashMap<String, Object>();
+		templateVars.put("debugging?", getContext().isDebuggingMode());
 
-        reader.close();
+		Writer writer = m.execute(new StringWriter(), templateVars);
 
-        return postFunction.toString();
+		return writer.toString();
     }
 
 }
