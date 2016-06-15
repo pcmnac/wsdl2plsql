@@ -42,11 +42,12 @@ public class wsdl2plsql implements Runnable
     private int operationsPerPackage;
     private String[] operations;
     private String[] services;
+    private boolean debuggingOutput;
 
     private static final Logger L = LoggerFactory.getLogger(wsdl2plsql.class);
 
     public wsdl2plsql(String wsdlUrl, String packageName, String destDir, String[] services, String[] operations,
-            int operationsPerPackage)
+            int operationsPerPackage, boolean debuggingOutput)
     {
         this.wsdlUrl = wsdlUrl;
         this.packageName = packageName;
@@ -54,6 +55,7 @@ public class wsdl2plsql implements Runnable
         this.operations = operations;
         this.services = services;
         this.operationsPerPackage = operationsPerPackage;
+        this.debuggingOutput = debuggingOutput;
     }
 
     @Override
@@ -71,6 +73,7 @@ public class wsdl2plsql implements Runnable
         context.setServices(services);
         context.setPackageName(packageName);
         context.resolveProtocol(K.Protocol.SOAP_1_2);
+        context.setDebuggingMode(debuggingOutput);
 
         context.setKeywordEmitter(new DefaultKeywordEmitter());
         context.setSymbolNameEmitter(new DefaultSymbolNameEmitter());
@@ -283,6 +286,12 @@ public class wsdl2plsql implements Runnable
                         "Path to a *.properties file with the list of services (one per line) to be included in the generation task.")//
                 .create("wsp"));
 
+        options.addOption(OptionBuilder//
+                .withLongOpt("debug")//
+                .withDescription(
+                        "Generates client with debugging output")//
+                .create("d"));
+
         CommandLineParser parser = new BasicParser();
         try
         {
@@ -361,8 +370,10 @@ public class wsdl2plsql implements Runnable
 
             String[] srvs = new String[services.size()];
 
+            boolean debugging = line.hasOption("d");
+
             wsdl2plsql wsdl2plsql = new wsdl2plsql(wsdl, packageName, dest, services.toArray(srvs),
-                    operations.toArray(ops), operationsPerPackage);
+                    operations.toArray(ops), operationsPerPackage, debugging);
 
             try
             {
