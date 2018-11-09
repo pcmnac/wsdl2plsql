@@ -257,8 +257,16 @@ public class FunctionBodyWriter extends BaseWriter
         }
         else
         {
-            // RAISE err_fault
-            body.l(INDENT + 2, "%s %s;\n", ke.raise(), getContext().getSoapFaultException().name());
+        	String exceptionRecordName = getContext().getSoapFaultException().varName();
+        	
+        	String exceptionTypeId = getContext().getSoapFaultException().getType().getId();
+
+        	RecordType exceptionRecordType = (RecordType) getContext().getCustomType(exceptionTypeId);
+        	
+        	String faultStringfieldName = exceptionRecordType.getMembers().get(1).name();
+        	
+        	// RAISE err_fault
+            body.l(INDENT + 2, "raise_application_error(%d, %s.%s);\n", getContext().getSoapFaultException().getNumber(), exceptionRecordName, faultStringfieldName);
         }
 
         // END IF;

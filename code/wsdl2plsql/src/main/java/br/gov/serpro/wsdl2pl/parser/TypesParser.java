@@ -92,6 +92,7 @@ public class TypesParser
         dissectComplexType(soapFaultComplexType);
 
         Exception soapFaultException = new Exception(context, new ElementInfo("SoapFault"));
+        soapFaultException.setNumber(context.nextExceptionId());
         soapFaultException.setType(new ComplexTypeDef(context, soapFaultComplexType.getQname()));
 
         context.registerSoapFaultException(soapFaultException);
