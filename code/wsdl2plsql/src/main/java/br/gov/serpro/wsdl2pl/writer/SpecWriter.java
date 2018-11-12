@@ -54,16 +54,20 @@ public class SpecWriter extends BaseWriter
             {
                 spec.l(1, "-- %s", exception.comments());
                 spec.l(1, "%s;", exception.decl());
-                if (exception.getType() != null)
+                if (exception.getType() != null || exception.getNumber() != null)
                 {
-                    // err_name EXCEPTION;
-                    spec.l(1, "%s;\n", exception.var());
-                }
-                else if (exception.getNumber() != null)
-                {
-                    // PRAGMA EXCEPTION_INIT(err_name, -20000);
-                    spec.l(1, "%s %s(%s, %d);\n", ke.pragma(), ke.exceptionInit(), exception.name(),
-                            exception.getNumber());
+                    if (exception.getType() != null)
+                    {
+                        // err_name EXCEPTION;
+                        spec.l(1, "%s;\n", exception.var());
+                    }
+
+                    if (exception.getNumber() != null)
+                    {
+                        // PRAGMA EXCEPTION_INIT(err_name, -20000);
+                        spec.l(1, "%s %s(%s, %d);\n", ke.pragma(), ke.exceptionInit(), exception.name(),
+                                exception.getNumber());
+                    }
                 }
                 else
                 {
