@@ -25,13 +25,14 @@
     END fc_print_long_clob;
   {{/debugging?}}
 
-    FUNCTION fc_post
+    PROCEDURE pr_post
     (
         wp_url IN VARCHAR2,
         wp_data IN CLOB,
-        wp_soap_action VARCHAR2 DEFAULT NULL
+        wp_soap_action VARCHAR2 DEFAULT NULL,
+        wp_response_status OUT INTEGER,
+        wp_response_body OUT CLOB
     )
-        RETURN CLOB
     IS
         --
         wl_request  utl_http.req;
@@ -77,6 +78,7 @@
 
         -- get response
         wl_response := utl_http.get_response(wl_request);
+        wp_response_status := wl_response.status_code;
         dbms_lob.createtemporary(wl_buffer, FALSE);
         BEGIN
             LOOP
@@ -97,9 +99,9 @@
         END IF;
       {{/debugging?}}
 
-        RETURN wl_buffer;
+        wp_response_body := wl_buffer;
 
-    END fc_post;
+    END pr_post;
 
     FUNCTION fc_to_date(
         wp_string varchar2

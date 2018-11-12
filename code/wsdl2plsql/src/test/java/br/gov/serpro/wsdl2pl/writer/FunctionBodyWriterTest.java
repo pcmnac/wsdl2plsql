@@ -52,6 +52,25 @@ public class FunctionBodyWriterTest {
 		assertThat(output, containsString(expected));
 	}
 
+	@Test
+	public void handleParsingErrors() throws IOException {
+        // Target code:
+        // pr_post(wp_url, wl_request, '', wl_response_status, wl_response_text);
+        // begin
+        //     wl_response := XMLTYPE.createXml(wl_response_text);
+        // exception
+        //     when err_xml_parsing then
+        //         raise_application_error(-20001, 'HTTP request failed with status ' || wl_response_status);
+        // end;
+		Context context = makeContext();
+
+		final String output = new FunctionBodyWriter(context).write();
+
+		assertThat(output, containsString("pr_post(wp_url, wl_request, 'https://oracle-base.com/webservices/server.php/ws_add', wl_response_status, wl_response_text)"));
+		assertThat(output, containsString("when err_xml_parsing then"));
+		assertThat(output, containsString("raise_application_error(-20001, 'HTTP request failed with status ' || wl_response_status)"));
+	}
+
 	private Context makeContext() {
         WSDLParser parser = new WSDLParser();
 

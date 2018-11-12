@@ -62,6 +62,8 @@ public class Context
 
     private String inputValidationExceptionId;
 
+    private String xmlParsingExceptionId;
+
     private Map<String, String> namespacePrefixes = new HashMap<String, String>();
 
     private int exceptionId = 20000;
@@ -341,6 +343,16 @@ public class Context
     {
         return exceptions.get(inputValidationExceptionId);
     }
+
+    public void registerXmlParsingException(Exception exception)
+    {
+        registerException(exception);
+        xmlParsingExceptionId = exception.getId();
+    }
+
+    public Exception getXmlParsingException() {
+        return exceptions.get(xmlParsingExceptionId);
+	}
 
     public void resolveProtocol(String preferredProtocol)
     {
