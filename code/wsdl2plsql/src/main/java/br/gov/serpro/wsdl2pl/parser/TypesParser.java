@@ -102,6 +102,10 @@ public class TypesParser
         Exception inputValidationException = new Exception(context, new ElementInfo("InputValidation"));
         inputValidationException.setNumber(context.nextExceptionId());
         context.registerInputValidationException(inputValidationException);
+
+        Exception xmlParsingException = new Exception(context, new ElementInfo("XmlParsing"));
+        xmlParsingException.setNumber(-31011);
+        context.registerXmlParsingException(xmlParsingException);
     }
 
     private ComplexType buildSoap11FaultComplexType()

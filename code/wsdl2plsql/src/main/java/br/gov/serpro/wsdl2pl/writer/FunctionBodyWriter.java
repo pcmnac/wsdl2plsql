@@ -56,6 +56,8 @@ public class FunctionBodyWriter extends BaseWriter
 
             getContext().registerUsedException(getContext().getInputValidationException());
 
+            getContext().registerUsedException(getContext().getXmlParsingException());
+
             for (Function function : getContext().getPlFunctions())
             {
                 if (getContext().isElegible(function))
@@ -113,6 +115,7 @@ public class FunctionBodyWriter extends BaseWriter
             varResult = new LocalVar(getContext(), "result", function.getReturnType().emit(), function.getId());
         }
         LocalVar varRequest = new LocalVar(getContext(), "request", ke.clob(), function.getId());
+        LocalVar varResponseStatus = new LocalVar(getContext(), "responseStatus", ke.integer(), function.getId());
         LocalVar varResponseText = new LocalVar(getContext(), "responseText", ke.clob(), function.getId());
         LocalVar varResponse = new LocalVar(getContext(), "response", ke.xmlType(), function.getId());
         LocalVar varResponseHeader = new LocalVar(getContext(), "responseHeader", ke.xmlType(), function.getId());
@@ -130,6 +133,7 @@ public class FunctionBodyWriter extends BaseWriter
             body.l(INDENT + 1, varResult.decl());
         }
         body.l(INDENT + 1, varRequest.decl());
+        body.l(INDENT + 1, varResponseStatus.decl());
         body.l(INDENT + 1, varResponseText.decl());
         body.l(INDENT + 1, varResponse.decl());
         if (function.getOutputHeader() != null)
@@ -186,12 +190,27 @@ public class FunctionBodyWriter extends BaseWriter
 
         String soapAction = (function.getSoapAction() != null ? "'" + function.getSoapAction() + "'" : ke.nullKey());
 
-        // responseText = post(url, request, soapAction);
-        body.l(INDENT + 1, "%s := fc_post(%s, %s, %s);", varResponseText.name(), function.getUrlParam().name(),
-                varRequest.name(), soapAction);
+        // responseStatus, responseText = post(url, request, soapAction);
+        body.l(INDENT + 1, "pr_post(%s, %s, %s, %s, %s);", function.getUrlParam().name(),
+                varRequest.name(), soapAction, varResponseStatus.name(), varResponseText.name());
 
-        // response = XmlType.createXml(responseText);
-        body.l(INDENT + 1, "%s := %s.createXml(%s);\n", varResponse.name(), ke.xmlType(), varResponseText.name());
+        // begin
+        body.l(INDENT + 1, "%s", ke.begin());
+
+        //     response := XmlType.createXml(responseText);
+        body.l(INDENT + 2, "%s := %s.createXml(%s);\n", varResponse.name(), ke.xmlType(), varResponseText.name());
+
+        // exception
+        body.l(INDENT + 1, "%s", ke.exception());
+
+        //     when XmlParsingException then
+        body.l(INDENT + 2, "when %s then", getContext().getXmlParsingException().name());
+
+        //         raise_application_error(-20001, 'HTTP request failed with status ' || responseStatus);
+        body.l(INDENT + 3, "raise_application_error(%s, 'HTTP request failed with status ' || %s);", getContext().getSoapFaultException().getNumber(), varResponseStatus.name());
+
+        // end;
+        body.l(INDENT + 1, "%s;", ke.end());
 
         // IF response.existsNode("/envelope/body/fault") THEN
         body.l(INDENT + 1, "%s %s.existsNode('/%s/%s/%s', %s) = 1 %s", ke.ifKey(), varResponse.name(),
